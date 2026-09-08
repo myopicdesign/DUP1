@@ -1047,10 +1047,7 @@ footer a:hover{color:var(--black)}
 </section>
 
 <!-- FOOTER -->
-<div id="site-footer"></div>
-<script>
-fetch('footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').innerHTML=html});
-</script>
+<div data-include="footer.html"></div>
 
 <script>
 // Scroll reveal
@@ -1110,5 +1107,6 @@ document.querySelectorAll('.faq-q').forEach(q => {
 });
 </script>
 
+<script src="include.js"></script>
 </body>
 </html>
