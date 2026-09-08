@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUPY Pro — The Script Builder for Creators Who Want to Be Seen</title>
+<meta name="description" content="DUPY Pro is the node-based script builder that turns ideas into viral-structured videos. One-time payment. Yours forever.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@1&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --black:#111;
+  --white:#fff;
+  --off:#f7f6f3;
+  --border:#e5e3de;
+  --muted:#999;
+  --green:#6100FF;
+  --green-dark:#4d00cc;
+  --green-bg:#f0eaff;
+  --mono:'Courier New',monospace;
+  --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+}
+
+body{font-family:var(--sans);background:var(--white);color:var(--black);font-size:16px;line-height:1.6;overflow-x:hidden}
+
+/* dot grid */
+body::before{
+  content:'';position:fixed;top:56px;left:0;right:0;bottom:0;
+  background-image:radial-gradient(circle,#b0b0b0 1px,transparent 1px);
+  background-size:24px 24px;opacity:0.35;pointer-events:none;z-index:-1;
+}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:56px;
+  background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.logo{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--black);text-decoration:none;letter-spacing:-0.02em}
+.logo span{color:var(--green)}
+.nav-r{display:flex;align-items:center;gap:1.5rem}
+.nav-link{font-size:0.875rem;color:var(--muted);text-decoration:none;transition:color .15s}
+.nav-link:hover{color:var(--black)}
+.nav-btn{
+  background:var(--green);color:var(--white);
+  padding:0.45rem 1.25rem;border-radius:6px;
+  font-size:0.875rem;font-weight:700;text-decoration:none;
+  transition:opacity .15s;
+}
+.nav-btn:hover{opacity:.82}
+
+/* ── ANNOUNCEMENT STRIP ── */
+.strip{
+  background:var(--black);color:var(--white);
+  text-align:center;padding:.6rem 1rem;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;
+  display:flex;align-items:center;justify-content:center;gap:.75rem;
+}
+.strip-badge{
+  background:var(--green);color:#fff;
+  padding:.2rem .6rem;border-radius:4px;font-weight:700;letter-spacing:.04em;
+  font-size:.65rem;
+}
+.strip a{color:#fff;text-decoration:underline;text-underline-offset:3px;opacity:.8}
+.strip a:hover{opacity:1}
+
+/* ── HERO ── */
+.hero{
+  max-width:960px;margin:0 auto;
+  padding:7rem 2rem 2.5rem;
+  text-align:center;
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.45rem;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--green-dark);background:var(--green-bg);
+  padding:.3rem .85rem;border-radius:100px;margin-bottom:2rem;
+}
+.eyebrow::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hero h1{
+  font-size:clamp(3rem,6vw,5.2rem);
+  font-weight:800;letter-spacing:-.045em;line-height:1.02;
+  margin-bottom:1.75rem;
+}
+.hero h1 em{
+  font-family:'DM Serif Display',Georgia,serif;
+  font-style:italic;font-weight:400;
+  color:var(--green);
+}
+.hero-sub{
+  font-size:1.15rem;color:#555;line-height:1.7;
+  max-width:580px;margin:0 auto 2.5rem;
+}
+
+/* CTA group */
+.cta-group{
+  display:flex;align-items:center;justify-content:center;gap:1rem;
+  flex-wrap:wrap;margin-bottom:0;
+}
+.btn-primary{
+  background:var(--green);color:#fff;
+  padding:1rem 2.25rem;border-radius:8px;
+  font-size:1rem;font-weight:700;text-decoration:none;
+  transition:background .15s,transform .1s;display:inline-block;
+}
+.btn-primary:hover{background:var(--green-dark);transform:translateY(-2px)}
+.btn-ghost{
+  background:transparent;color:var(--black);
+  padding:1rem 2.25rem;border-radius:8px;border:1.5px solid var(--border);
+  font-size:1rem;font-weight:600;text-decoration:none;
+  transition:border-color .15s,background .15s;display:inline-block;
+}
+.btn-ghost:hover{border-color:#aaa;background:var(--off)}
+
+.hero-proof{
+  font-size:.82rem;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:1rem;
+  flex-wrap:wrap;
+}
+.hero-proof span{display:flex;align-items:center;gap:.4rem}
+.hero-proof strong{color:var(--black)}
+
+.hero-trust{
+  display:flex;flex-direction:column;align-items:center;gap:.6rem;
+  margin-bottom:1.75rem;
+}
+.hero-trust__top{
+  display:flex;align-items:center;gap:.85rem;
+}
+.hero-trust__avatars{display:flex}
+.hero-trust__avatars img{
+  width:40px;height:40px;border-radius:50%;object-fit:cover;
+  border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.15);
+  margin-left:-12px;
+}
+.hero-trust__avatars img:first-child{margin-left:0}
+.hero-trust__stars{position:relative;display:inline-block;font-size:1.05rem;letter-spacing:.08em;line-height:1}
+.hero-trust__stars .stars-bg{color:#e3dbf7}
+.hero-trust__stars .stars-fg{
+  position:absolute;top:0;left:0;color:var(--green);
+  width:90%;overflow:hidden;white-space:nowrap;
+}
+.hero-trust__label{font-size:.85rem;color:var(--muted);font-weight:500}
+
+/* ── PRODUCT SCREENSHOT FRAME ── */
+.screen-wrap{
+  max-width:1100px;margin:0 auto;padding:0 2rem 0;
+  position:relative;
+  filter:drop-shadow(0 40px 80px rgba(0,0,0,.22));
+}
+
+/* App mock inside frame */
+.app-mock__img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:16px;
+}
+.app-sidebar{
+  background:#12121f;
+  border-right:1px solid rgba(255,255,255,.06);
+  padding:1.25rem 1rem;
+  display:flex;flex-direction:column;gap:.5rem;
+}
+.app-sidebar__logo{
+  font-family:var(--mono);font-size:.85rem;font-weight:700;
+  color:#fff;margin-bottom:1rem;padding:.5rem .25rem;
+}
+.app-sidebar__logo span{color:var(--green)}
+.app-sidebar__section{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(255,255,255,.25);
+  padding:.25rem .5rem;margin-top:.5rem;
+}
+.app-sidebar__item{
+  font-size:.8rem;color:rgba(255,255,255,.55);
+  padding:.5rem .75rem;border-radius:6px;
+  display:flex;align-items:center;gap:.6rem;cursor:pointer;
+  transition:background .12s,color .12s;
+}
+.app-sidebar__item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.app-sidebar__item--active{
+  background:rgba(97,0,255,.25);color:#fff;
+  border-left:2px solid var(--green);padding-left:calc(.75rem - 2px);
+}
+.app-sidebar__dot{width:7px;height:7px;border-radius:50%}
+
+.app-canvas{
+  background:repeating-linear-gradient(
+    0deg,rgba(255,255,255,.015) 0px,rgba(255,255,255,.015) 1px,transparent 1px,transparent 28px
+  ),
+  repeating-linear-gradient(
+    90deg,rgba(255,255,255,.015) 0px,rgba(255,255,255,.015) 1px,transparent 1px,transparent 28px
+  );
+  position:relative;
+  overflow:hidden;
+}
+
+/* Node cards */
+.node{
+  position:absolute;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:.85rem 1rem;
+  font-size:.75rem;
+  color:#fff;
+  min-width:150px;
+  backdrop-filter:blur(4px);
+}
+.node__label{
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:.35rem;
+}
+.node__title{font-weight:700;font-size:.82rem;margin-bottom:.25rem;color:#fff}
+.node__text{font-size:.72rem;color:rgba(255,255,255,.55);line-height:1.45}
+.node--accent{background:rgba(97,0,255,.35);border-color:rgba(97,0,255,.6)}
+.node--hook{top:28px;left:32px}
+.node--dev{top:28px;left:230px}
+.node--cta{top:28px;left:420px}
+.node--surprise{top:155px;left:130px}
+.node--output{top:145px;left:350px;background:rgba(0,184,101,.15);border-color:rgba(0,184,101,.35)}
+
+/* SVG connector lines */
+.canvas-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+
+.app-panel{
+  background:#12121f;
+  border-left:1px solid rgba(255,255,255,.06);
+  padding:1.25rem;
+  display:flex;flex-direction:column;gap:1rem;
+}
+.app-panel__title{
+  font-size:.78rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.app-panel__title span{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;
+  color:rgba(255,255,255,.3);
+}
+.app-panel__field{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:.75rem .85rem;
+}
+.app-panel__field label{
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);display:block;margin-bottom:.35rem;
+}
+.app-panel__field p{font-size:.75rem;color:rgba(255,255,255,.7);line-height:1.5}
+.app-panel__score{
+  text-align:center;background:rgba(97,0,255,.15);border:1px solid rgba(97,0,255,.3);
+  border-radius:10px;padding:1rem;
+}
+.app-panel__score-num{
+  font-family:var(--mono);font-size:2.4rem;font-weight:800;color:var(--green);line-height:1;margin-bottom:.25rem;
+}
+.app-panel__score-label{font-size:.65rem;color:rgba(255,255,255,.35);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.app-panel__bar-wrap{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin:.6rem 0 .25rem}
+.app-panel__bar{height:100%;width:78%;background:linear-gradient(90deg,var(--green),#a78bfa);border-radius:3px}
+.app-panel__btn{
+  background:var(--green);color:#fff;border:none;
+  border-radius:7px;padding:.65rem;font-family:inherit;font-size:.78rem;
+  font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;
+}
+.app-panel__btn:hover{opacity:.85}
+
+/* ── SOCIAL PROOF BAR ── */
+.proof-bar{
+  padding:3rem 2rem 4rem;text-align:center;
+}
+.proof-bar__inner{
+  max-width:960px;margin:0 auto;
+  background:linear-gradient(135deg,var(--green-bg) 0%,#f7f4ff 55%,#ffffff 100%);
+  border:1px solid rgba(97,0,255,.1);
+  border-radius:28px;
+  box-shadow:0 30px 70px -20px rgba(97,0,255,.18);
+  padding:3.25rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-around;gap:2.5rem;flex-wrap:wrap;
+}
+.proof-stat{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.proof-stat__n{font-family:var(--mono);font-size:2.6rem;font-weight:800;color:var(--green-dark);letter-spacing:-.03em}
+.proof-stat__label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+
+/* ── SECTION SHARED ── */
+.section-label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--green-dark);background:var(--green-bg);
+  padding:.25rem .75rem;border-radius:100px;margin-bottom:1.25rem;
+}
+.section-head{
+  font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.04em;line-height:1.08;
+  margin-bottom:1rem;
+}
+.section-head em{font-style:normal;color:var(--green)}
+.section-sub{font-size:1rem;color:#666;line-height:1.7;max-width:560px}
+
+/* ── PROBLEM ↔ SOLUTION ── */
+.problem-section{
+  max-width:1100px;margin:7rem auto;padding:0 2rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;
+}
+.problem-left{}
+.problem-right{}
+
+.problem-list{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.problem-item{
+  display:flex;align-items:flex-start;gap:.85rem;
+  padding:1rem 1.25rem;border-radius:12px;
+  border:1px solid var(--border);background:var(--white);
+}
+.problem-item__icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+}
+.problem-item--bad .problem-item__icon{background:#fff0f0;color:#e04040}
+.problem-item--good .problem-item__icon{background:var(--green-bg);color:var(--green)}
+.problem-item__text{font-size:.9rem;color:#444;line-height:1.55}
+.problem-item__text strong{color:var(--black);display:block;font-size:.88rem;margin-bottom:.15rem}
+
+/* ── FEATURES BENTO GRID ── */
+.bento-section{
+  max-width:1100px;margin:0 auto 7rem;padding:0 2rem;
+}
+.bento-head{text-align:center;margin-bottom:3.5rem}
+.bento-head .section-sub{margin:0 auto}
+
+.bento{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:auto;
+  gap:1.25rem;
+}
+
+.bento-card{
+  background:var(--off);border:1px solid var(--border);
+  border-radius:20px;padding:2rem;
+  overflow:hidden;position:relative;
+}
+.bento-card__label{
+  font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:.5rem;display:block;
+}
+.bento-card__title{font-size:1.1rem;font-weight:700;letter-spacing:-.025em;margin-bottom:.5rem}
+.bento-card__desc{font-size:.85rem;color:#666;line-height:1.6}
+
+/* bento layout */
+.bc-1{grid-column:span 5}
+.bc-2{grid-column:span 4}
+.bc-3{grid-column:span 3}
+.bc-4{grid-column:span 7}
+.bc-5{grid-column:span 5}
+.bc-6{grid-column:span 6}
+.bc-7{grid-column:span 6}
+
+/* Bento visual accents */
+.bento-card--dark{background:var(--black);color:#fff;border-color:#1a1a1a}
+.bento-card--dark .bento-card__label{color:rgba(255,255,255,.3)}
+.bento-card--dark .bento-card__desc{color:#aaa}
+.bento-card--purple{background:var(--green);color:#fff;border-color:var(--green-dark)}
+.bento-card--purple .bento-card__label{color:rgba(255,255,255,.5)}
+.bento-card--purple .bento-card__desc{color:rgba(255,255,255,.8)}
+
+/* mini node vis inside bento */
+.mini-nodes{
+  margin-top:1.25rem;
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+}
+.mini-node{
+  font-size:.72rem;font-weight:700;
+  padding:.4rem .9rem;border-radius:8px;
+  border:1.5px solid rgba(255,255,255,.18);
+  color:#fff;background:rgba(255,255,255,.1);
+}
+.mini-node--accent{background:rgba(97,0,255,.5);border-color:var(--green)}
+.mini-arrow{color:rgba(255,255,255,.35);font-size:.85rem}
+
+/* score pill */
+.score-preview{
+  margin-top:1.5rem;
+  display:flex;flex-direction:column;gap:.5rem;
+}
+.score-row{display:flex;align-items:center;gap:.75rem}
+.score-row__label{font-size:.75rem;color:rgba(255,255,255,.5);width:70px;flex-shrink:0;font-family:var(--mono)}
+.score-row__bar{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.score-row__fill{height:100%;border-radius:3px}
+.score-row__fill--1{width:82%;background:linear-gradient(90deg,var(--green),#a78bfa)}
+.score-row__fill--2{width:65%;background:linear-gradient(90deg,#f0a500,var(--green))}
+.score-row__fill--3{width:90%;background:linear-gradient(90deg,#06d6a0,var(--green))}
+.score-row__n{font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;width:32px;text-align:right}
+
+/* platform badges */
+.platform-badges{margin-top:1.25rem;display:flex;flex-direction:column;gap:.6rem}
+.pb{
+  display:flex;align-items:center;gap:.75rem;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:9px;padding:.55rem .9rem;
+}
+.pb__dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pb__name{font-size:.8rem;font-weight:600;color:#fff}
+.pb__tag{margin-left:auto;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.35);letter-spacing:.06em}
+
+/* structure steps */
+.struct-steps{margin-top:1.25rem;display:flex;flex-direction:column;gap:.5rem}
+.ss{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .85rem;border-radius:9px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+}
+.ss__n{
+  font-family:var(--mono);font-size:.65rem;font-weight:700;
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.5);flex-shrink:0;
+}
+.ss__text{font-size:.78rem;color:rgba(255,255,255,.75);font-weight:600}
+.ss--active{background:rgba(97,0,255,.25);border-color:rgba(97,0,255,.45)}
+.ss--active .ss__n{background:var(--green);color:#fff}
+.ss--active .ss__text{color:#fff}
+
+/* lifetime badge */
+.lifetime-badge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;padding:.35rem .85rem;border-radius:100px;margin-top:1.25rem;
+}
+
+/* offline badge */
+.offline-vis{
+  margin-top:1.25rem;
+  display:flex;align-items:center;justify-content:center;
+  gap:.85rem;
+}
+.offline-circle{
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+}
+.offline-label{font-size:.8rem;color:rgba(255,255,255,.65);line-height:1.4;font-weight:600}
+.offline-line{width:28px;height:2px;background:rgba(255,255,255,.15);border-radius:1px}
+
+/* ── HOW IT WORKS ── */
+.how-section{
+  background:#0d0d0d;color:#fff;
+  padding:7rem 2rem;
+  margin:0;
+  position:relative;overflow:hidden;
+}
+.how-section::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,#1e1e1e 1px,transparent 1px);
+  background-size:22px 22px;pointer-events:none;z-index:0;
+}
+.how-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.how-head{text-align:center;margin-bottom:4rem}
+.how-head .section-head em{color:#5400DE}
+.how-head .section-sub{color:#aaa;margin:0 auto}
+.how-head .section-label{background:rgba(97,0,255,.25);color:#c4b5fd}
+
+/* ── NODE FLOW — DESKTOP HORIZONTAL ── */
+.how-flow{
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  gap:0;
+  width:100%;
+}
+
+/* card */
+.hf-node{
+  flex:1;
+  background:#141414;
+  border:1px solid #282828;
+  border-radius:14px;
+  padding:20px 18px 22px;
+  position:relative;
+}
+.hf-node-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:12px;
+}
+.hf-node-num{
+  font-family:var(--mono);font-size:.68rem;font-weight:700;
+  color:rgba(255,255,255,.18);letter-spacing:.08em;
+}
+.hf-node-icon{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:rgba(97,0,255,.25);border:1px solid rgba(124,92,252,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+}
+.hf-node-title{font-size:.92rem;font-weight:700;color:#fff;margin-bottom:6px}
+.hf-node-desc{font-size:.78rem;color:#555;line-height:1.65}
+
+/* connector between cards — horizontal on desktop */
+.hf-conn{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:48px;
+  position:relative;
+  align-self:stretch;
+}
+.hf-conn::before{
+  content:'';
+  position:absolute;
+  top:50%;left:0;right:0;
+  height:2px;
+  transform:translateY(-50%);
+  background:rgba(124,92,252,.5);
+}
+.hf-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:#7c5cfc;
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:2;
+}
+.hf-dot-a{left:0}
+.hf-dot-c{right:0}
+
+/* ── MOBILE VERTICAL ── */
+@media(max-width:700px){
+  .how-flow{flex-direction:column;align-items:center}
+  .hf-node{width:100%;max-width:400px}
+  .hf-conn{
+    width:2px;height:56px;
+    flex-direction:column;
+    align-self:auto;
+  }
+  .hf-conn::before{
+    top:0;bottom:0;left:50%;right:auto;
+    width:2px;height:100%;
+    transform:translateX(-50%);
+    background:rgba(124,92,252,.5);
+  }
+  .hf-dot{left:50% !important;right:auto !important;transform:translateX(-50%)}
+  .hf-dot-a{top:0;transform:translateX(-50%)}
+  .hf-dot-c{top:auto;bottom:0;transform:translateX(-50%)}
+}
+
+/* ── TESTIMONIALS ── */
+.testimonials-section{
+  max-width:1100px;margin:7rem auto;padding:0 2rem;
+}
+.testi-head{text-align:center;margin-bottom:3.5rem}
+.testi-head .section-sub{margin:0 auto}
+
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.testi-card{
+  background:var(--off);border:1px solid var(--border);
+  border-radius:16px;padding:1.75rem;
+  display:flex;flex-direction:column;gap:1rem;
+}
+.testi-card--featured{
+  background:var(--black);border-color:#1a1a1a;color:#fff;
+  grid-row:span 1;
+}
+.testi-stars{color:#f0a500;font-size:.9rem;letter-spacing:.1em}
+.testi-text{font-size:.9rem;line-height:1.7;color:#444;font-style:italic}
+.testi-card--featured .testi-text{color:#bbb}
+.testi-author{display:flex;align-items:center;gap:.75rem;margin-top:auto}
+.testi-avatar{
+  width:36px;height:36px;border-radius:50%;
+  font-size:.85rem;display:flex;align-items:center;justify-content:center;
+  font-weight:700;flex-shrink:0;overflow:hidden;
+}
+.testi-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.testi-name{font-size:.85rem;font-weight:700;color:var(--black)}
+.testi-card--featured .testi-name{color:#fff}
+.testi-handle{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
+
+/* ── FAQ ── */
+.faq-section{
+  max-width:720px;margin:0 auto 7rem;padding:0 2rem;
+}
+.faq-head{text-align:center;margin-bottom:3rem}
+.faq-item{
+  border-bottom:1px solid var(--border);
+  padding:1.25rem 0;
+}
+.faq-item:first-of-type{border-top:1px solid var(--border)}
+.faq-q{
+  font-size:.95rem;font-weight:700;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;
+  letter-spacing:-.015em;
+}
+.faq-chevron{
+  font-size:.75rem;color:var(--muted);transition:transform .2s;flex-shrink:0;
+  font-style:normal;
+}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-a{
+  font-size:.88rem;color:#555;line-height:1.7;
+  max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;
+}
+.faq-item.open .faq-a{max-height:600px;padding-top:.85rem}
+
+/* ── PRICING CTA ── */
+.pricing-cta{
+  max-width:700px;margin:0 auto 8rem;padding:0 2rem;text-align:center;
+}
+.price-card-solo{
+  background:var(--black);color:#fff;
+  border-radius:24px;padding:3rem;
+  position:relative;overflow:hidden;
+}
+.price-card-solo::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(97,0,255,.4),transparent 70%);
+  pointer-events:none;
+}
+.pcs-eyebrow{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  padding:.25rem .75rem;border-radius:100px;display:inline-block;margin-bottom:1.5rem;
+}
+.pcs-lifetime{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;
+  color:#fff;font-weight:700;margin-bottom:.75rem;
+}
+.pcs-price{
+  font-family:var(--mono);font-size:4rem;font-weight:800;letter-spacing:-.04em;
+  line-height:1;margin-bottom:.25rem;
+}
+.pcs-price sup{font-size:1.75rem;vertical-align:top;margin-top:.75rem;margin-right:.15rem}
+.pcs-period{font-size:.85rem;color:#777;margin-bottom:2.5rem}
+
+.pcs-features{
+  display:grid;grid-template-columns:1fr 1fr;gap:.7rem;
+  text-align:left;margin-bottom:2.5rem;
+}
+.pcs-feat{
+  display:flex;align-items:flex-start;gap:.6rem;font-size:.85rem;color:#ccc;
+}
+.pcs-feat::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+
+.pcs-cta{
+  display:block;background:var(--green);color:#fff;
+  padding:1.1rem;border-radius:10px;font-size:1rem;font-weight:700;
+  text-decoration:none;transition:background .15s,transform .1s;margin-bottom:1rem;
+}
+.pcs-cta:hover{background:var(--green-dark);transform:translateY(-2px)}
+.pcs-note{font-size:.78rem;color:#555;font-family:var(--mono)}
+
+.guarantee{
+  display:flex;align-items:center;gap:.75rem;margin-top:1.5rem;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:.85rem 1rem;text-align:left;
+}
+.guarantee__icon{font-size:1.25rem;flex-shrink:0}
+.guarantee__text{font-size:.82rem;color:#aaa;line-height:1.5}
+.guarantee__text strong{color:#fff;display:block;margin-bottom:.1rem}
+
+/* ── FINAL CTA STRIP ── */
+.final-cta{
+  background:var(--off);border-top:1px solid var(--border);
+  padding:5rem 2rem;text-align:center;
+}
+.final-cta h2{
+  font-size:clamp(2rem,4vw,2.8rem);font-weight:800;letter-spacing:-.04em;
+  line-height:1.1;margin-bottom:.75rem;
+}
+.final-cta h2 em{font-family:'DM Serif Display',serif;font-style:italic;color:var(--green);font-weight:400}
+.final-cta p{font-size:1rem;color:#666;margin-bottom:2rem}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--white);border-top:1px solid var(--border);
+  padding:2rem;display:flex;align-items:center;justify-content:space-between;
+  font-size:.8rem;color:var(--muted);font-family:var(--mono);flex-wrap:wrap;gap:1rem;
+}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--black)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+
+/* ── SCROLL ANIMATION ── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .problem-section{grid-template-columns:1fr;gap:3rem}
+  .bento{grid-template-columns:1fr 1fr}
+  .bc-1,.bc-2,.bc-3,.bc-4,.bc-5,.bc-6,.bc-7{grid-column:span 2}
+  .bc-3{grid-column:span 2}
+  .how-step-UNUSED{display:none}
+  .testi-grid{grid-template-columns:1fr}
+  .pcs-features{grid-template-columns:1fr}
+  .app-mock{min-height:unset}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2.6rem}
+  .bento{grid-template-columns:1fr}
+  .bc-1,.bc-2,.bc-3,.bc-4,.bc-5,.bc-6,.bc-7{grid-column:span 1}
+  .proof-bar__inner{gap:1.75rem;padding:2.25rem 1.5rem}
+  .proof-stat__n{font-size:2rem}
+  .how-step-UNUSED2{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo" style="display:flex;align-items:center"><svg width="80" height="32" viewBox="0 0 101 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M95.0104 8.88383C95.0104 9.65831 95.0104 20.2733 95.0104 21.7312C95.0104 25.0569 93.4101 26.8793 90.7583 26.8793C88.1064 26.8793 86.5061 25.0569 86.5061 21.7312C86.5061 20.2733 86.5061 9.65831 86.5061 8.88383H80.4708C80.4708 10.0683 80.4708 20.5011 80.4708 21.549C80.4708 21.6856 80.4708 21.8679 80.4708 22.0046C80.3794 25.6492 79.0534 26.8793 77.0416 26.8793C75.7157 26.8793 74.5727 26.4692 73.5211 25.9226C74.5727 24.0547 75.3042 21.5945 75.3042 18.7244C75.3042 12.9841 71.3721 8.42825 65.9312 8.42825C63.4165 8.42825 61.4962 9.24829 59.9416 10.8428L59.713 8.83827H54.1349V21.1845C54.1806 24.9658 52.6261 26.3781 50.9344 26.3781C49.2884 26.3781 47.9167 25.5581 47.9167 22.8702C47.9167 22.6424 47.9167 22.0046 47.9167 21.1845C47.9167 19.1344 47.9167 14.0319 47.9167 11.0251C47.9167 9.93166 47.9167 9.11162 47.9167 8.79271H41.8814C41.8814 8.97494 41.8814 9.84055 41.8814 11.0251C41.8814 13.9863 41.8814 18.9977 41.8814 21.0023C41.8814 21.2756 41.8814 21.549 41.8814 21.6856C41.8814 25.0114 40.2811 26.8337 37.6292 26.8337C34.9774 26.8337 33.3771 25.0114 33.3771 21.6856C33.3771 20.2278 33.3771 9.61276 33.3771 8.83827H27.3875C27.3875 9.97722 27.3875 19.18 27.3875 21.1845C27.4332 24.9658 25.8787 26.3781 24.187 26.3781C22.541 26.3781 21.1693 25.5581 21.1693 22.8702V11.0251V0H15.134V8.88383C14.2653 8.61048 13.1679 8.42825 11.842 8.42825C5.71526 8.42825 0 12.6651 0 20.6378C0 26.7426 3.9321 31.5718 9.37302 31.5718C12.5736 31.5718 14.8597 30.2506 16.5514 27.5626C18.0145 30.205 20.4835 31.5718 23.3182 31.5718C26.3816 31.5718 28.3019 30.0683 29.3536 28.4282C30.8167 30.4328 33.1028 31.5718 35.9832 31.5718C39.3667 31.5718 41.8814 30.1139 43.2988 27.6082C44.6704 30.2506 46.9565 31.5718 49.4255 31.5718C51.163 31.5718 52.9004 30.7973 54.1349 29.4305V40H60.1702V18.3144C60.1702 14.9431 62.4106 13.5763 64.8339 13.5763C67.6229 13.5763 69.6804 15.3075 69.6804 19.18C69.6347 20 69.6347 21.7312 69.0403 23.0068C68.1716 22.5057 67.2114 22.1868 66.1598 22.1868C63.7823 22.1868 62.182 23.7813 62.182 26.0592C62.182 28.5649 64.148 30.2506 67.0285 30.2506C67.0742 30.2506 67.12 30.2506 67.1657 30.2506C67.2114 30.2506 67.2114 30.2506 67.2571 30.2506C68.5374 30.2506 69.8176 29.7494 71.0063 28.8838C72.4694 30.2961 74.2526 31.6173 77.1331 31.6173C79.5106 31.6173 81.3395 30.6606 82.574 28.7472C83.9914 30.5695 86.1403 31.6173 88.8379 31.6173C91.4441 31.6173 93.5016 30.7061 94.9647 29.0661V40.0456H101V21.2301C101 18.451 101 9.93166 101 8.88383H95.0104ZM10.8818 26.4692C8.32141 26.4692 6.44681 24.5558 6.44681 20.1822C6.44681 15.3986 8.87008 13.1207 12.4821 13.1207C13.3051 13.1207 14.2196 13.2574 15.134 13.5308V21.0934V21.7312C15.134 25.0569 13.0765 26.4692 10.8818 26.4692Z" fill="black"/></svg></a>
+  <div class="nav-r">
+    <a href="#come-funziona" class="nav-link">How it works</a>
+    <a href="#prezzi" class="nav-link">Pricing</a>
+    <a href="blog.html" class="nav-link">Blog</a>
+    <a href="#prezzi" class="nav-btn">Try DUPY Pro</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero reveal">
+  <div class="hero-trust">
+    <div class="hero-trust__top">
+      <div class="hero-trust__avatars">
+        <img src="img/trust1.jpg" alt="">
+        <img src="img/trust2.jpg" alt="">
+        <img src="img/trust3.jpg" alt="">
+        <img src="img/trust4.jpg" alt="">
+        <img src="img/trust5.jpg" alt="">
+        <img src="img/trust6.jpg" alt="">
+      </div>
+      <div class="hero-trust__stars">
+        <span class="stars-bg">★★★★★</span>
+        <span class="stars-fg">★★★★★</span>
+      </div>
+    </div>
+    <p class="hero-trust__label">Trusted By Creators Worldwide</p>
+  </div>
+  <h1>
+    Structure that <em>stops the scroll.</em>
+  </h1>
+  <p class="hero-sub">
+    DUPY Pro turns raw ideas into scripts engineered for attention. Not a text editor. An architect of virality.
+  </p>
+  <div class="cta-group">
+    <a href="#pricing" class="btn-primary">Download</a>
+    <a href="index.html#free" class="btn-ghost">Try free tool</a>
+  </div>
+</section>
+
+<!-- PRODUCT SCREENSHOT -->
+<div class="screen-wrap reveal">
+  <img src="img/tool.png" alt="DUPY Pro — Script Builder" class="app-mock__img">
+</div>
+
+<!-- SOCIAL PROOF BAR -->
+<div class="proof-bar reveal">
+  <div class="proof-bar__inner">
+    <div class="proof-stat">
+      <span class="proof-stat__n">2,400+</span>
+      <span class="proof-stat__label">Scripts built</span>
+    </div>
+    <div class="proof-stat">
+      <span class="proof-stat__n">€14,99</span>
+      <span class="proof-stat__label">One-time, forever</span>
+    </div>
+    <div class="proof-stat">
+      <span class="proof-stat__n">100%</span>
+      <span class="proof-stat__label">Offline capable</span>
+    </div>
+    <div class="proof-stat">
+      <span class="proof-stat__n">∞</span>
+      <span class="proof-stat__label">Unlimited scripts</span>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM / SOLUTION -->
+<div class="problem-section">
+  <div class="problem-left reveal">
+    <div class="section-label">The problem</div>
+    <h2 class="section-head">Most creators write.<br>They don't <em>architect.</em></h2>
+    <p class="section-sub">Writing a script in a doc is like building a house without blueprints. You end up with walls, but no rooms.</p>
+    <div class="problem-list">
+      <div class="problem-item problem-item--bad">
+        <div class="problem-item__icon">✗</div>
+        <div class="problem-item__text">
+          <strong>You stare at a blank doc</strong>
+          Ideas exist in your head but won't structure themselves into a hook, body, CTA.
+        </div>
+      </div>
+      <div class="problem-item problem-item--bad">
+        <div class="problem-item__icon">✗</div>
+        <div class="problem-item__text">
+          <strong>You post and hope</strong>
+          No way to predict if your video is built to hold attention before you shoot.
+        </div>
+      </div>
+      <div class="problem-item problem-item--bad">
+        <div class="problem-item__icon">✗</div>
+        <div class="problem-item__text">
+          <strong>You rewrite the whole thing</strong>
+          Changing one section means rewriting top to bottom. No modularity.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="problem-right reveal">
+    <div class="section-label" style="background:var(--green-bg);color:var(--green-dark)">The DUPY way</div>
+    <h2 class="section-head">Build with nodes.<br><em>Think in structure.</em></h2>
+    <p class="section-sub">Every part of your video is a node. Move them, swap them, analyze them, and score them — before you ever hit record.</p>
+    <div class="problem-list">
+      <div class="problem-item problem-item--good">
+        <div class="problem-item__icon">✓</div>
+        <div class="problem-item__text">
+          <strong>Start with your idea, not a cursor</strong>
+          Drop your concept into the builder. DUPY automatically suggests a structure.
+        </div>
+      </div>
+      <div class="problem-item problem-item--good">
+        <div class="problem-item__icon">✓</div>
+        <div class="problem-item__text">
+          <strong>Know your video length in advance</strong>
+          Write and see your estimated video duration in real time. Know exactly how long your script and video will be before you shoot.
+        </div>
+      </div>
+      <div class="problem-item problem-item--good">
+        <div class="problem-item__icon">✓</div>
+        <div class="problem-item__text">
+          <strong>Organize your entire video with nodes</strong>
+          Node-based editing lets you manage visual references and notes directly within each section of your script.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="how-inner">
+    <div class="how-head reveal">
+      <div class="section-label">How it works</div>
+      <h2 class="section-head">From idea to<br><em>shoot-ready script</em><br>in four steps.</h2>
+      <p class="section-sub">No onboarding. No tutorials. Open DUPY, start building.</p>
+    </div>
+    <div class="how-flow reveal">
+
+      <div class="hf-node">
+        <div class="hf-node-top">
+          <span class="hf-node-num">01</span>
+          <div class="hf-node-icon">💡</div>
+        </div>
+        <div class="hf-node-title">Drop your idea</div>
+        <div class="hf-node-desc">Write what your video is about: your point of view and the raw idea for your script. That's all DUPY needs to get started. Or use nodes independently to build and organize your video your way.</div>
+      </div>
+
+      <div class="hf-conn">
+        <div class="hf-dot hf-dot-a"></div>
+        <div class="hf-dot hf-dot-c"></div>
+      </div>
+
+      <div class="hf-node">
+        <div class="hf-node-top">
+          <span class="hf-node-num">02</span>
+          <div class="hf-node-icon">🗂️</div>
+        </div>
+        <div class="hf-node-title">Choose a structure</div>
+        <div class="hf-node-desc">Pick a pre-built narrative framework or start from scratch. Every structure is tested on high-performing short-form content.</div>
+      </div>
+
+      <div class="hf-conn">
+        <div class="hf-dot hf-dot-a"></div>
+        <div class="hf-dot hf-dot-c"></div>
+      </div>
+
+      <div class="hf-node">
+        <div class="hf-node-top">
+          <span class="hf-node-num">03</span>
+          <div class="hf-node-icon">✦</div>
+        </div>
+        <div class="hf-node-title">Build node by node</div>
+        <div class="hf-node-desc">Write the text yourself or generate it for each node. Rearrange, replace, refine. Your final script updates in real time, so you always know where you stand and how long your video will be.</div>
+      </div>
+
+      <div class="hf-conn">
+        <div class="hf-dot hf-dot-a"></div>
+        <div class="hf-dot hf-dot-c"></div>
+      </div>
+
+      <div class="hf-node">
+        <div class="hf-node-top">
+          <span class="hf-node-num">04</span>
+          <div class="hf-node-icon">🎬</div>
+        </div>
+        <div class="hf-node-title">Export &amp; shoot</div>
+        <div class="hf-node-desc">Save your script locally and start shooting. No cloud uploads. No sharing required. Just you and your computer.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <div class="testi-head reveal">
+    <div class="section-label">Creators who use DUPY</div>
+    <h2 class="section-head">They stopped hoping.<br>They started <em>being seen.</em></h2>
+    <p class="section-sub">Real feedback from early adopters who traded blank docs for node-based architecture.</p>
+  </div>
+  <div class="testi-grid reveal">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"I've tried all kinds of scriptwriting tools. DUPY is the first one that actually changed the way I think about videos... not just the way I write them."</div>
+      <div class="testi-author">
+        <div class="testi-avatar"><img src="trust1.png" alt="Marco R."></div>
+        <div>
+          <div class="testi-name">Marco R.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card testi-card--featured">
+      <div class="testi-stars">★★★★</div>
+      <div class="testi-text">"The structure DUPY gives you is worth the price alone. I had a video that just wasn't working, so I rewrote the exact same topic using DUPY. That video got 2 million views."</div>
+      <div class="testi-author">
+        <div class="testi-avatar"><img src="trust2.png" alt="Sara K."></div>
+        <div>
+          <div class="testi-name">Sara K.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card">
+      <div class="testi-stars">★★★★</div>
+      <div class="testi-text">"Finally, a script tool built for people who already understand content strategy. Not another AI ghostwriter, but a real architect. Honestly, I'm not even using the AI. I just love having a clear, organized structure that I can control."</div>
+      <div class="testi-author">
+        <div class="testi-avatar"><img src="trust4.png" alt="Luca B."></div>
+        <div>
+          <div class="testi-name">Luca B.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="faq-head reveal">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-head">Questions.<br><em>Answered.</em></h2>
+  </div>
+
+  <div class="faq-item open">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      What exactly is DUPY Pro? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">DUPY Pro is a desktop-first script builder designed to help creators think, structure, write, and refine short-form video scripts. Instead of working in a traditional text editor, you build your script on a node-based canvas, where every part of your video can be moved, edited, scored, and organized independently.<br><br>DUPY Pro includes an AI text generator. AI is not built directly into the software, but is managed through a BYOK (Bring Your Own Key) system. You can generate a free API key through Groq and add it to DUPY to generate text directly inside the app. You also get access to numerous pre-built narrative structures developed as node systems, the ability to add visual references and notes to each section, real-time video duration tracking, and local project saving.<br><br>No subscription. No cloud. No account required.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      Is it really a one-time payment? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">Yes. For now, DUPY Pro is a one-time purchase with no recurring subscription.<br><br>Pay once and keep using the version you purchased. No monthly fees, no annual plans, and no account required to keep working on your projects.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      Does it work offline? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">Yes. DUPY Pro is designed to run locally on your computer. Your scripts and projects are saved locally, so you don't need to upload your work to the cloud or stay connected to the internet to use the core features.<br><br>Some AI-powered features require an internet connection to generate content.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      What platforms is DUPY Pro available on? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">DUPY Pro is a desktop application designed for creators who want a dedicated writing environment directly on their computer.<br><br>It is currently available for macOS and Windows.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      How is DUPY Pro different from the free tool? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">The free tool lets you analyze the narrative structures used by other creators, helping you understand how successful videos are structured and replicate their framework.<br><br>DUPY Pro is the actual script builder: it lets you build, organize, and manage your own scripts through a node-based system, with pre-built narrative structures, AI generation, visual references, notes, and local project management.<br><br>In short: the free tool helps you understand the structures behind successful videos. DUPY Pro lets you build them.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      Is there a refund policy? <em class="faq-chevron">▾</em>
+    </div>
+    <div class="faq-a">No. DUPY Pro is desktop software that is purchased and used locally on your computer. For this reason, we currently cannot guarantee refunds on purchases.</div>
+  </div>
+</section>
+
+<!-- PRICING CTA -->
+<section class="pricing-cta" id="pricing">
+  <div class="reveal">
+    <div class="section-label" style="margin-bottom:1.5rem">Pricing</div>
+    <h2 class="section-head" style="margin-bottom:3rem">Get DUPY Pro.<br><em>Once. Forever.</em></h2>
+  </div>
+
+  <div class="price-card-solo reveal">
+    <div class="pcs-eyebrow">DUPY Pro</div>
+    <div class="pcs-lifetime">⚡ LIFETIME — Only for the first 1,000 users</div>
+    <div class="pcs-price"><sup>€</sup>14<span style="font-size:2rem">.99</span></div>
+    <div class="pcs-period">One-time payment · Yours forever · No subscription</div>
+
+    <div class="pcs-features">
+      <div class="pcs-feat">Strategic Script Builder</div>
+      <div class="pcs-feat">AI-Powered Text Generator (Bring Your Own Key)</div>
+      <div class="pcs-feat">Pre-Built Narrative Structures</div>
+      <div class="pcs-feat">Node-Based Canvas</div>
+      <div class="pcs-feat">Unlimited Scripts</div>
+      <div class="pcs-feat">Local File Saving</div>
+      <div class="pcs-feat">100% Offline Capable (no AI)</div>
+      <div class="pcs-feat">No Account Required</div>
+    </div>
+
+    <a href="#" class="pcs-cta">Get DUPY →</a>
+
+    <div class="guarantee" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;margin-top:1rem">
+      <div style="font-size:1.3rem;flex-shrink:0">🔥</div>
+      <div style="text-align:left">
+        <div style="font-size:.72rem;color:rgba(255,255,255,.4);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Live purchases</div>
+        <div style="display:flex;align-items:baseline;gap:.4rem">
+          <span id="buyer-count" style="font-family:var(--mono);font-size:1.5rem;font-weight:800;color:#fff">232</span>
+          <span style="font-size:.82rem;color:rgba(255,255,255,.55)">users have already purchased DUPY Pro</span>
+        </div>
+        <div style="margin-top:.45rem;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+          <div id="buyer-bar" style="height:100%;width:23.2%;background:linear-gradient(90deg,var(--green),#a78bfa);border-radius:3px;transition:width 1s ease"></div>
+        </div>
+        <div style="font-size:.65rem;color:rgba(255,255,255,.3);font-family:var(--mono);margin-top:.3rem"><span id="buyer-remaining">768</span> spots remaining out of 1,000</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div id="site-footer"></div>
+<script>
+fetch('footer.html').then(r=>r.text()).then(html=>{document.getElementById('site-footer').innerHTML=html});
+</script>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); }});
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Buyer counter animation
+(function(){
+  const BASE = 232;
+  const TOTAL = 1000;
+  let current = BASE;
+  const el = document.getElementById('buyer-count');
+  const bar = document.getElementById('buyer-bar');
+  const rem = document.getElementById('buyer-remaining');
+  function update(n){
+    if(!el) return;
+    el.textContent = n;
+    rem.textContent = (TOTAL - n);
+    bar.style.width = (n / TOTAL * 100).toFixed(1) + '%';
+  }
+  // Animate count up from 0 to BASE on load
+  let start = null;
+  function countUp(ts){
+    if(!start) start = ts;
+    const progress = Math.min((ts - start) / 1200, 1);
+    const val = Math.round(progress * BASE);
+    update(val);
+    if(progress < 1) requestAnimationFrame(countUp);
+    else {
+      // After reaching BASE, increment randomly every 45–90s
+      scheduleNext();
+    }
+  }
+  requestAnimationFrame(countUp);
+  function scheduleNext(){
+    const delay = (45 + Math.random() * 45) * 1000;
+    setTimeout(() => {
+      current += 1;
+      update(current);
+      scheduleNext();
+    }, delay);
+  }
+})();
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(q => {
+  // Remove inline onclick to avoid double-firing
+  q.removeAttribute('onclick');
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if(!wasOpen) item.classList.add('open');
+  });
+});
+</script>
+
+</body>
+</html>
