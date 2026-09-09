@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUPY Blog – Script, Hook e Strategie Virali</title>
-<meta name="description" content="Risorse gratuite su come scrivere script che fermano lo scroll, costruire hook irresistibili e creare contenuti video che portano risultati.">
+<title>DUPY Blog – Scripts, Hooks & Viral Strategies</title>
+<meta name="description" content="Free resources on how to write scroll-stopping scripts, build irresistible hooks and create video content that delivers results.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@1&display=swap" rel="stylesheet">
@@ -134,13 +134,13 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 <div data-include="navbar.html"></div>
 
 <div class="blog-hero">
-  <div class="hero-eyebrow">Risorse gratuite</div>
-  <h1>Script, Hook e<br><em>Strategie Virali.</em></h1>
-  <p>Tutto quello che devi sapere per costruire video che catturano attenzione e fanno crescere il tuo canale.</p>
+  <div class="hero-eyebrow">Free resources</div>
+  <h1>Scripts, Hooks &<br><em>Viral Strategies.</em></h1>
+  <p>Everything you need to know to build videos that capture attention and grow your channel.</p>
 </div>
 
 <div class="filter-bar">
-  <button class="filter-btn active" onclick="filterArticles('all', this)">Tutti</button>
+  <button class="filter-btn active" onclick="filterArticles('all', this)">All</button>
   <button class="filter-btn" onclick="filterArticles('Script', this)">Script</button>
   <button class="filter-btn" onclick="filterArticles('Hook', this)">Hook</button>
   <button class="filter-btn" onclick="filterArticles('Viral Strategy', this)">Viral Strategy</button>
@@ -169,14 +169,14 @@ let currentFilter = 'all';
 
 async function fetchArticles() {
   const r = await fetch(ARTICLES_INDEX_URL + '?t=' + Date.now());
-  if (!r.ok) throw new Error('Impossibile leggere ' + ARTICLES_INDEX_URL);
+  if (!r.ok) throw new Error('Unable to load ' + ARTICLES_INDEX_URL);
   return r.json();
 }
 
 function formatDate(str) {
   if (!str) return '';
   const [y, m, d] = str.split('-');
-  const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
 }
 
@@ -201,7 +201,7 @@ function renderGrid() {
   if (!articles.length) {
     grid.innerHTML = `<div class="empty-blog">
       <p style="font-size:2rem;margin-bottom:.75rem">✍️</p>
-      <p>Nessun articolo ancora${currentFilter !== 'all' ? ' in questa categoria' : ''}.</p>
+      <p>No articles yet${currentFilter !== 'all' ? ' in this category' : ''}.</p>
     </div>`;
     return;
   }
@@ -231,7 +231,7 @@ function renderGrid() {
             <div class="card-author-dot">${initials(a.author)}</div>
             ${a.author}
           </div>
-          <span class="card-arrow">Leggi →</span>
+          <span class="card-arrow">Read →</span>
         </div>
       </div>
     </a>`;
@@ -243,7 +243,7 @@ function renderGrid() {
     allArticles = await fetchArticles();
     renderGrid();
   } catch (err) {
-    document.getElementById('blogGrid').innerHTML = `<div class="empty-blog"><p>Errore nel caricamento degli articoli.<br><small style="color:#e04040">${err.message}</small></p></div>`;
+    document.getElementById('blogGrid').innerHTML = `<div class="empty-blog"><p>Error loading articles.<br><small style="color:#e04040">${err.message}</small></p></div>`;
   }
 })();
 </script>
