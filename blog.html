@@ -55,7 +55,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .skeleton-line.title{height:20px;width:85%}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-.article-card{background:var(--white);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s;display:flex;flex-direction:column;text-decoration:none;color:inherit}
+.article-card{background:var(--white);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s;display:flex;flex-direction:column}
 .article-card:hover{border-color:var(--green);box-shadow:0 6px 28px rgba(97,0,255,.1);transform:translateY(-2px)}
 .article-card.featured{grid-column:span 2}
 .card-cover{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--off);position:relative}
@@ -166,7 +166,6 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 
 <div data-include="footer.html"></div>
 
-<!-- LIGHTBOX MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
   <div class="modal" id="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -175,17 +174,24 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 </div>
 
 <script>
-// Niente più Supabase qui: la griglia legge l'indice statico generato
-// dalla GitHub Action (generate-blog.js) insieme alle pagine per-articolo.
-// Supabase viene interpellato solo in fase di generazione, non ad ogni visita.
-const ARTICLES_INDEX_URL = 'blog/articles-index.json';
+const SUPABASE_URL = 'https://tklrhmvmdcnhgjeepnin.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0XFGo7JQnz2qeIvIBVX2Dg_xiyAjJfe';
+
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json'
+};
 
 let allArticles = [];
 let currentFilter = 'all';
 
 async function fetchArticles() {
-  const r = await fetch(ARTICLES_INDEX_URL, { cache: 'no-cache' });
-  if (!r.ok) throw new Error('Impossibile leggere ' + ARTICLES_INDEX_URL);
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/articles?status=eq.published&order=created_at.desc`,
+    { headers: HEADERS }
+  );
+  if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
@@ -231,7 +237,7 @@ function renderGrid() {
     const tagsHtml = (a.tags||[]).length
       ? `<div class="card-tags">${a.tags.map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>` : '';
 
-    return `<div class="article-card${featured ? ' featured' : ''}" onclick="openArticle('${a.slug}')">
+    return `<div class="article-card${featured ? ' featured' : ''}" onclick="openArticle('${a.id}')">
       ${coverHtml}
       <div class="card-body">
         <div class="card-meta">
@@ -254,8 +260,8 @@ function renderGrid() {
   }).join('');
 }
 
-function openArticle(slug) {
-  const a = allArticles.find(x => x.slug === slug);
+function openArticle(id) {
+  const a = allArticles.find(x => x.id === id);
   if (!a) return;
 
   const coverHtml = a.cover
@@ -265,7 +271,7 @@ function openArticle(slug) {
   const tagsHtml = (a.tags||[]).length
     ? `<div class="modal-tags">${a.tags.map(t=>`<span class="modal-tag">${t}</span>`).join('')}</div>` : '';
 
-  const pageUrl = encodeURIComponent(window.location.href.split('?')[0] + '?a=' + slug);
+  const pageUrl = encodeURIComponent(window.location.href.split('?')[0] + '?a=' + id);
   const pageTitle = encodeURIComponent(a.title);
 
   document.getElementById('modalContent').innerHTML = `
@@ -291,7 +297,7 @@ function openArticle(slug) {
       </div>
       <div class="share-bar">
         <span>Condividi</span>
-        <button class="share-btn" onclick="copyLink('${slug}')">🔗 Copia link</button>
+        <button class="share-btn" onclick="copyLink('${id}')">🔗 Copia link</button>
         <a class="share-btn" href="https://twitter.com/intent/tweet?url=${pageUrl}&text=${pageTitle}" target="_blank" rel="noopener">𝕏 Twitter</a>
         <a class="share-btn" href="https://wa.me/?text=${pageTitle}%20${pageUrl}" target="_blank" rel="noopener">💬 WhatsApp</a>
       </div>
@@ -304,12 +310,14 @@ function openArticle(slug) {
 
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  history.pushState({ articleSlug: slug }, '', '?a=' + slug);
+  history.pushState({ articleId: id }, '', '?a=' + id);
 }
 
-function copyLink(slug) {
-  const url = window.location.href.split('?')[0] + '?a=' + slug;
-  navigator.clipboard.writeText(url).then(() => showToast('Link copiato!'));
+function copyLink(id) {
+  const url = window.location.href.split('?')[0] + '?a=' + id;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copiato!');
+  });
 }
 
 function showToast(msg) {
@@ -326,23 +334,21 @@ function closeModal() {
   document.body.style.overflow = '';
   history.pushState({}, '', window.location.pathname);
 }
-
 function closeModalOnOverlay(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
-
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 window.addEventListener('popstate', () => {
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
 });
 
-// Init: legge l'indice statico, niente più fetch a Supabase né modal da aprire —
-// ogni card è ora un link diretto alla pagina statica dell'articolo.
+// Init
 (async () => {
   try {
     allArticles = await fetchArticles();
     renderGrid();
+    // Auto-open article from URL param
     const params = new URLSearchParams(window.location.search);
     if (params.get('a')) openArticle(params.get('a'));
   } catch (err) {
