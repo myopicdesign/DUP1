@@ -528,8 +528,18 @@ footer a:hover{color:var(--black)}
 // Scroll reveal
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); }});
-}, { threshold: 0.08 });
+}, { threshold: 0 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Forza visibilità elementi già nel viewport al caricamento
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.reveal').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      el.classList.add('visible');
+    }
+  });
+});
 
 // TOC active-section highlighting
 const tocLinks = Array.from(document.querySelectorAll('#toc-list a'));
