@@ -145,9 +145,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .nav-link:hover{color:var(--black)}
 .nav-btn{background:var(--black);color:var(--white);padding:.45rem 1.1rem;border-radius:6px;font-size:0.875rem;font-weight:600;text-decoration:none;transition:opacity .15s}
 .nav-btn:hover{opacity:.82}
-.breadcrumb{max-width:820px;margin:0 auto;padding:1.25rem 2rem 0;display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:var(--muted);flex-wrap:wrap}
-.breadcrumb a{color:var(--muted);text-decoration:none}.breadcrumb a:hover{color:var(--black)}
-.breadcrumb span{color:var(--black);font-weight:700}
 .article-wrap{max-width:820px;margin:0 auto;padding:2.5rem 2rem 6rem}
 .modal-cover{width:100%;aspect-ratio:16/7;object-fit:cover;display:block;border-radius:16px;margin-bottom:2rem}
 .modal-cover-placeholder{width:100%;aspect-ratio:16/7;background:linear-gradient(135deg,var(--green-bg) 0%,#e8e0ff 100%);display:flex;align-items:center;justify-content:center;border-radius:16px;margin-bottom:2rem}
@@ -200,12 +197,6 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
     <a href="../blog.html" class="nav-link active">Blog</a>
     <a href="../index.html#pricing" class="nav-btn">Try for free</a>
   </div>
-</nav>
-
-<nav class="breadcrumb" aria-label="Breadcrumb">
-  <a href="../index.html">Home</a><span>›</span>
-  <a href="../blog.html">Blog</a><span>›</span>
-  <span>${a.title}</span>
 </nav>
 
 <article class="article-wrap" itemscope itemtype="https://schema.org/Article">
