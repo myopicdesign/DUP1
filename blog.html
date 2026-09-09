@@ -166,6 +166,14 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 
 <div data-include="footer.html"></div>
 
+<!-- LIGHTBOX MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <script>
 // Niente più Supabase qui: la griglia legge l'indice statico generato
 // dalla GitHub Action (generate-blog.js) insieme alle pagine per-articolo.
@@ -223,7 +231,7 @@ function renderGrid() {
     const tagsHtml = (a.tags||[]).length
       ? `<div class="card-tags">${a.tags.map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>` : '';
 
-    return `<a class="article-card${featured ? ' featured' : ''}" href="blog/${a.slug}.html">
+    return `<div class="article-card${featured ? ' featured' : ''}" onclick="openArticle('${a.slug}')">
       ${coverHtml}
       <div class="card-body">
         <div class="card-meta">
@@ -242,9 +250,92 @@ function renderGrid() {
           <span class="card-arrow">Leggi →</span>
         </div>
       </div>
-    </a>`;
+    </div>`;
   }).join('');
 }
+
+function openArticle(slug) {
+  const a = allArticles.find(x => x.slug === slug);
+  if (!a) return;
+
+  const coverHtml = a.cover
+    ? `<img class="modal-cover" src="${a.cover}" alt="${a.title}">`
+    : `<div class="modal-cover-placeholder"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#6100FF" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
+
+  const tagsHtml = (a.tags||[]).length
+    ? `<div class="modal-tags">${a.tags.map(t=>`<span class="modal-tag">${t}</span>`).join('')}</div>` : '';
+
+  const pageUrl = encodeURIComponent(window.location.href.split('?')[0] + '?a=' + slug);
+  const pageTitle = encodeURIComponent(a.title);
+
+  document.getElementById('modalContent').innerHTML = `
+    ${coverHtml}
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="modal-cat">${a.category}</span>
+        <span class="modal-date">${formatDate(a.date)}</span>
+        <span class="modal-read">${a.read_time} min di lettura</span>
+      </div>
+      <h1>${a.title}</h1>
+      ${a.subtitle ? `<p class="modal-subtitle">${a.subtitle}</p>` : ''}
+      <div class="article-content">${a.content || '<p>Contenuto non disponibile.</p>'}</div>
+      <div class="modal-author-row">
+        <div class="modal-author">
+          <div class="modal-author-dot">${initials(a.author)}</div>
+          <div>
+            <strong>${a.author}</strong>
+            <span>Team DUPY</span>
+          </div>
+        </div>
+        ${tagsHtml}
+      </div>
+      <div class="share-bar">
+        <span>Condividi</span>
+        <button class="share-btn" onclick="copyLink('${slug}')">🔗 Copia link</button>
+        <a class="share-btn" href="https://twitter.com/intent/tweet?url=${pageUrl}&text=${pageTitle}" target="_blank" rel="noopener">𝕏 Twitter</a>
+        <a class="share-btn" href="https://wa.me/?text=${pageTitle}%20${pageUrl}" target="_blank" rel="noopener">💬 WhatsApp</a>
+      </div>
+      <div class="modal-cta">
+        <h3>Pronto a costruire script che fermano lo scroll?</h3>
+        <p>Analizza il tuo video gratis e scopri il tuo Viral Score. Poi costruisci con DUPY.</p>
+        <a href="index.html">Prova DUPY gratis →</a>
+      </div>
+    </div>`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ articleSlug: slug }, '', '?a=' + slug);
+}
+
+function copyLink(slug) {
+  const url = window.location.href.split('?')[0] + '?a=' + slug;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copiato!'));
+}
+
+function showToast(msg) {
+  let t = document.getElementById('blogToast');
+  if (!t) { t = document.createElement('div'); t.id='blogToast'; t.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--black);color:#fff;padding:.7rem 1.5rem;border-radius:8px;font-size:.875rem;font-weight:600;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:999';document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(20px)'; }, 2500);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  history.pushState({}, '', window.location.pathname);
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+window.addEventListener('popstate', () => {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+});
 
 // Init: legge l'indice statico, niente più fetch a Supabase né modal da aprire —
 // ogni card è ora un link diretto alla pagina statica dell'articolo.
@@ -252,6 +343,8 @@ function renderGrid() {
   try {
     allArticles = await fetchArticles();
     renderGrid();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('a')) openArticle(params.get('a'));
   } catch (err) {
     document.getElementById('blogGrid').innerHTML = `<div class="empty-blog"><p>Errore nel caricamento degli articoli.<br><small style="color:#e04040">${err.message}</small></p></div>`;
   }
