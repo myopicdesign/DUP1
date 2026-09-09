@@ -290,12 +290,31 @@ function showToast(msg){let t=document.getElementById('t');if(!t){t=document.cre
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
   const slugs = [];
+  const indexData = [];
   for (const a of articles) {
     const slug = slugify(a.title);
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.html`), articleTemplate(a, slug), 'utf8');
     console.log(`  ✍️  blog/${slug}.html`);
     slugs.push({ slug, title: a.title });
+
+    // Dati leggeri per la griglia di blog.html: niente "content" qui,
+    // il testo completo vive solo dentro la pagina statica blog/{slug}.html
+    indexData.push({
+      id: a.id,
+      slug,
+      title: a.title,
+      subtitle: a.subtitle || '',
+      category: a.category,
+      date: a.date,
+      read_time: a.read_time,
+      cover: a.cover || '',
+      tags: a.tags || [],
+      author: a.author || 'Team DUPY',
+    });
   }
+
+  fs.writeFileSync(path.join(OUT_DIR, 'articles-index.json'), JSON.stringify(indexData, null, 2), 'utf8');
+  console.log(`  🗂  blog/articles-index.json (${indexData.length} articoli)`);
 
   // Sitemap
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
