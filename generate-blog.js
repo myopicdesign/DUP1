@@ -32,8 +32,8 @@ function slugify(title = '') {
 function formatDate(str) {
   if (!str) return '';
   const [y, m, d] = str.split('-');
-  const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
-                  'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
   return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
 }
 
@@ -93,7 +93,7 @@ function articleTemplate(a, slug) {
   };
 
   return `<!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,7 +110,7 @@ ${tagsStr ? `<meta name="keywords" content="${tagsStr}">` : ''}
 <meta property="og:image"       content="${ogImage}">
 <meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:locale"      content="it_IT">
+<meta property="og:locale"      content="en_US">
 <meta property="og:site_name"   content="DUPY">
 <meta property="article:published_time" content="${dateISO}">
 <meta property="article:author"         content="${a.author || 'Team DUPY'}">
@@ -195,10 +195,10 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 <nav>
   <a href="../index.html" style="display:flex;align-items:center;text-decoration:none">${NAV_LOGO}</a>
   <div class="nav-r">
-    <a href="../index.html#come-funziona" class="nav-link">Come funziona</a>
-    <a href="../index.html#prezzi" class="nav-link">Prezzi</a>
+    <a href="../index.html#how-it-works" class="nav-link">How it works</a>
+    <a href="../index.html#pricing" class="nav-link">Pricing</a>
     <a href="../blog.html" class="nav-link active">Blog</a>
-    <a href="../index.html#prezzi" class="nav-btn">Prova gratis</a>
+    <a href="../index.html#pricing" class="nav-btn">Try for free</a>
   </div>
 </nav>
 
@@ -209,21 +209,21 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 </nav>
 
 <article class="article-wrap" itemscope itemtype="https://schema.org/Article">
-  <a href="../blog.html" class="back-link">← Torna al blog</a>
+  <a href="../blog.html" class="back-link">← Back to blog</a>
 
   ${coverHtml}
 
   <div class="modal-meta">
     <span class="modal-cat">${a.category}</span>
     <span class="modal-date">${formatDate(a.date)}</span>
-    <span class="modal-read">${a.read_time} min di lettura</span>
+    <span class="modal-read">${a.read_time} min read</span>
   </div>
 
   <h1 class="article-title" itemprop="headline">${a.title}</h1>
   ${a.subtitle ? `<p class="modal-subtitle" itemprop="description">${a.subtitle}</p>` : ''}
 
   <div class="article-content" itemprop="articleBody">
-    ${a.content || '<p>Contenuto non disponibile.</p>'}
+    ${a.content || '<p>Content not available.</p>'}
   </div>
 
   <div class="modal-author-row">
@@ -238,27 +238,27 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
   </div>
 
   <div class="share-bar">
-    <span>Condividi</span>
-    <button class="share-btn" onclick="navigator.clipboard.writeText(location.href).then(()=>showToast('Link copiato!'))">🔗 Copia link</button>
+    <span>Share</span>
+    <button class="share-btn" onclick="navigator.clipboard.writeText(location.href).then(()=>showToast('Link copied!'))">🔗 Copy link</button>
     <a class="share-btn" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(a.title)}" target="_blank" rel="noopener">𝕏 Twitter</a>
     <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent(a.title + ' ' + url)}" target="_blank" rel="noopener">💬 WhatsApp</a>
   </div>
 
   <div class="modal-cta">
-    <h3>Pronto a costruire script che fermano lo scroll?</h3>
-    <p>Analizza il tuo video gratis e scopri il tuo Viral Score. Poi costruisci con DUPY.</p>
-    <a href="../index.html">Prova DUPY gratis →</a>
+    <h3>Ready to build scripts that stop the scroll?</h3>
+    <p>Analyze your video for free and discover your Viral Score. Then create with DUPY.</p>
+    <a href="../index.html">Try DUPY for free →</a>
   </div>
 </article>
 
 <footer>
   <a href="../index.html" style="display:flex;align-items:center;text-decoration:none">${NAV_LOGO}</a>
   <div class="footer-links">
-    <a href="../index.html#come-funziona">Come funziona</a>
-    <a href="../index.html#prezzi">Prezzi</a>
+    <a href="../index.html#how-it-works">How it works</a>
+    <a href="../index.html#pricing">Pricing</a>
     <a href="../blog.html">Blog</a>
     <a href="#">Privacy</a>
-    <a href="#">Termini</a>
+    <a href="#">Terms</a>
   </div>
   <span>© 2025 DUPY</span>
 </footer>
