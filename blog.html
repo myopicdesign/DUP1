@@ -46,7 +46,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .blog-grid-wrap{max-width:1100px;margin:0 auto;padding:0 2rem 6rem}
 .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
 
-/* Skeleton loader */
 .skeleton-card{background:var(--off);border-radius:16px;overflow:hidden;border:1.5px solid var(--border)}
 .skeleton-cover{width:100%;aspect-ratio:16/9;background:linear-gradient(90deg,var(--off) 25%,var(--border) 50%,var(--off) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
 .skeleton-body{padding:1.5rem;display:flex;flex-direction:column;gap:.75rem}
@@ -81,7 +80,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .empty-blog{text-align:center;padding:6rem 2rem;color:var(--muted);grid-column:1/-1}
 .empty-blog p{font-size:1rem;line-height:1.7;margin-bottom:1.5rem}
 
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:3rem 1.5rem;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--white);border-radius:20px;width:100%;max-width:760px;border:1.5px solid var(--border);transform:translateY(24px);transition:transform .25s;position:relative;overflow:hidden}
@@ -116,8 +114,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .modal-cta p{font-size:.875rem;color:#aaa;margin-bottom:1.25rem;line-height:1.55}
 .modal-cta a{display:inline-block;background:var(--green);color:#fff;padding:.7rem 1.75rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:.9rem;transition:background .15s}
 .modal-cta a:hover{background:var(--green-dark)}
-
-/* Share bar */
 .share-bar{display:flex;align-items:center;gap:.5rem;margin-top:1rem}
 .share-bar span{font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .share-btn{font-size:.75rem;font-weight:600;font-family:var(--sans);padding:.28rem .7rem;border-radius:5px;border:1.5px solid var(--border);background:var(--off);cursor:pointer;color:var(--muted);transition:all .12s}
@@ -154,7 +150,6 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 
 <div class="blog-grid-wrap">
   <div class="blog-grid" id="blogGrid">
-    <!-- skeleton -->
     <div class="skeleton-card featured" style="grid-column:span 2">
       <div class="skeleton-cover"></div>
       <div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line title"></div><div class="skeleton-line mid"></div></div>
@@ -167,16 +162,13 @@ footer span{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 <div data-include="footer.html"></div>
 
 <script>
-// Niente più Supabase qui: la griglia legge l'indice statico generato
-// dalla GitHub Action (generate-blog.js) insieme alle pagine per-articolo.
-// Supabase viene interpellato solo in fase di generazione, non ad ogni visita.
 const ARTICLES_INDEX_URL = 'blog/articles-index.json';
 
 let allArticles = [];
 let currentFilter = 'all';
 
 async function fetchArticles() {
-  const r = await fetch(ARTICLES_INDEX_URL, { cache: 'no-cache' });
+  const r = await fetch(ARTICLES_INDEX_URL + '?t=' + Date.now());
   if (!r.ok) throw new Error('Impossibile leggere ' + ARTICLES_INDEX_URL);
   return r.json();
 }
@@ -246,8 +238,6 @@ function renderGrid() {
   }).join('');
 }
 
-// Init: legge l'indice statico, niente più fetch a Supabase né modal da aprire —
-// ogni card è ora un link diretto alla pagina statica dell'articolo.
 (async () => {
   try {
     allArticles = await fetchArticles();
