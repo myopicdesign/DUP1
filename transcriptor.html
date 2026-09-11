@@ -45,7 +45,7 @@ body::before{
 
 /* ── PAGE WRAP ── */
 .page-wrap{
-  max-width:860px;
+  max-width:1200px;
   margin:0 auto;
   padding:4rem 2rem 6rem;
 }
@@ -110,12 +110,33 @@ body::before{
 .drop p{margin:0;color:var(--muted);font-size:.825rem}
 input[type=file]{display:none}
 
-video{width:100%;border-radius:10px;margin-top:1.25rem;display:block;border:1.5px solid var(--border)}
+video{width:100%;border-radius:12px;display:block;border:1.5px solid var(--border);aspect-ratio:9/16;object-fit:cover;background:#000}
+
+/* ── TWO COLUMN LAYOUT ── */
+.tool-layout{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:1.25rem;
+  align-items:start;
+}
+
+/* Left column: video + controls */
+.col-left{
+  display:flex;flex-direction:column;gap:1.25rem;
+  position:sticky;top:72px;
+}
+
+/* Right column: results */
+.col-right{
+  display:flex;flex-direction:column;gap:1.25rem;
+  min-width:0;
+}
 
 /* ── CONTROLS ROW ── */
 .controls-row{
-  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;
+  display:flex;flex-direction:column;gap:.6rem;margin-top:0;
 }
+.controls-row select{min-width:0;flex:none;width:100%}
 
 select{
   font-family:var(--sans);
@@ -200,7 +221,7 @@ select:focus{outline:none;border-color:var(--green)}
 
 /* ── SEGMENTS ── */
 .segments{
-  max-height:400px;overflow-y:auto;
+  max-height:500px;overflow-y:auto;
   display:flex;flex-direction:column;gap:1px;
   border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
 }
@@ -291,9 +312,12 @@ select:focus{outline:none;border-color:var(--green)}
   margin-top:1.5rem;font-family:var(--mono);
 }
 
+@media(max-width:900px){
+  .tool-layout{grid-template-columns:1fr}
+  .col-left{position:static}
+}
 @media(max-width:600px){
   .page-wrap{padding:2.5rem 1.25rem 4rem}
-  .controls-row{flex-direction:column;align-items:stretch}
   select{min-width:0}
   .actions{gap:.35rem}
   .btn{font-size:.8rem;padding:.45rem .9rem}
@@ -313,73 +337,92 @@ select:focus{outline:none;border-color:var(--green)}
     <p>Trascrizione automatica nel browser con Whisper. Nessun upload, nessun server. Poi analizza la struttura narrativa del tuo contenuto.</p>
   </div>
 
-  <!-- Upload Panel -->
-  <div class="panel">
-    <div class="panel-title">Carica il tuo video <span>Step 1</span></div>
-    <div class="drop" id="drop">
-      <span class="drop-icon">🎬</span>
-      <strong>Clicca per caricare o trascina qui</strong>
-      <p>MP4, WebM, MOV, MKV...</p>
-    </div>
-    <input type="file" id="fileInput" accept="video/*">
-    <video id="preview" controls style="display:none"></video>
+  <div class="tool-layout">
 
-    <div class="controls-row">
-      <select id="modelSelect">
-        <option value="Xenova/whisper-tiny">Whisper Tiny — veloce, meno preciso</option>
-        <option value="Xenova/whisper-base">Whisper Base — bilanciato</option>
-        <option value="Xenova/whisper-small" selected>Whisper Small — più preciso, più lento</option>
-      </select>
-      <select id="langSelect">
-        <option value="auto">Rileva lingua automaticamente</option>
-        <option value="italian">Italiano</option>
-        <option value="english">Inglese</option>
-        <option value="spanish">Spagnolo</option>
-        <option value="french">Francese</option>
-        <option value="german">Tedesco</option>
-        <option value="portuguese">Portoghese</option>
-      </select>
-      <button class="btn btn-green" id="transcribeBtn" disabled>Trascrivi →</button>
-    </div>
+    <!-- LEFT: video + controls -->
+    <div class="col-left">
+      <div class="panel">
+        <div class="panel-title">Video <span>Step 1</span></div>
+        <div class="drop" id="drop">
+          <span class="drop-icon">🎬</span>
+          <strong>Carica o trascina</strong>
+          <p>MP4, WebM, MOV, MKV...</p>
+        </div>
+        <input type="file" id="fileInput" accept="video/*">
+        <video id="preview" controls style="display:none"></video>
+        <button id="changeVideoBtn" style="display:none;margin-top:.6rem;background:none;border:none;font-family:var(--sans);font-size:.75rem;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">← Cambia video</button>
 
-    <div class="status" id="status">
-      <div class="spinner"></div>
-      <span id="statusText">Caricamento modello...</span>
-    </div>
-    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
-    <div class="error-msg" id="errorBox"></div>
-  </div>
+        <div class="controls-row" style="margin-top:1rem">
+          <select id="modelSelect">
+            <option value="Xenova/whisper-tiny">Whisper Tiny — veloce</option>
+            <option value="Xenova/whisper-base">Whisper Base — bilanciato</option>
+            <option value="Xenova/whisper-small" selected>Whisper Small — preciso</option>
+          </select>
+          <select id="langSelect">
+            <option value="auto">Lingua automatica</option>
+            <option value="italian">Italiano</option>
+            <option value="english">Inglese</option>
+            <option value="spanish">Spagnolo</option>
+            <option value="french">Francese</option>
+            <option value="german">Tedesco</option>
+            <option value="portuguese">Portoghese</option>
+          </select>
+          <button class="btn btn-green" id="transcribeBtn" disabled style="width:100%;justify-content:center">Trascrivi →</button>
+        </div>
 
-  <!-- Result Panel -->
-  <div class="panel" id="result-panel">
-    <div class="result-header">
-      <div class="panel-title" style="margin:0">Trascrizione <span>Step 2</span></div>
-      <div class="actions">
-        <button class="btn btn-secondary" id="viewToggle">Vista testo</button>
-        <button class="btn btn-secondary" id="copyBtn">Copia</button>
-        <button class="btn btn-secondary" id="downloadTxt">.txt</button>
-        <button class="btn btn-secondary" id="downloadSrt">.srt</button>
-        <button class="btn btn-primary" id="analyzeBtn">🔍 Analizza struttura</button>
+        <div class="status" id="status">
+          <div class="spinner"></div>
+          <span id="statusText">Caricamento modello...</span>
+        </div>
+        <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+        <div class="error-msg" id="errorBox"></div>
+        <p class="footer-note" style="text-align:left;margin-top:1rem">Modello scaricato una volta sola, poi in cache.</p>
       </div>
     </div>
-    <div class="segments" id="segments"></div>
-    <div class="plain-text" id="plainText"></div>
-  </div>
 
-  <!-- Structure Panel -->
-  <div class="panel" id="structure-panel">
-    <div class="result-header">
-      <div class="panel-title" style="margin:0">Struttura narrativa <span>Step 3</span></div>
-      <div class="actions">
-        <button class="btn btn-secondary" id="copyStructureBtn">Copia</button>
-        <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
+    <!-- RIGHT: transcript + structure -->
+    <div class="col-right">
+
+      <!-- Empty state -->
+      <div class="panel" id="empty-state">
+        <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+          <div style="font-size:2.5rem;margin-bottom:.75rem">🎬</div>
+          <div style="font-weight:700;color:var(--black);margin-bottom:.35rem">Carica un video per iniziare</div>
+          <div style="font-size:.875rem">La trascrizione e la struttura narrativa appariranno qui.</div>
+        </div>
       </div>
-    </div>
-    <div class="structure-legend" id="structureLegend"></div>
-    <div id="structureBlocks"></div>
-  </div>
 
-  <p class="footer-note">Il modello viene scaricato una volta sola e messo in cache dal browser. La prima trascrizione può richiedere qualche minuto.</p>
+      <!-- Result Panel -->
+      <div class="panel" id="result-panel">
+        <div class="result-header">
+          <div class="panel-title" style="margin:0">Trascrizione <span>Step 2</span></div>
+          <div class="actions">
+            <button class="btn btn-secondary" id="viewToggle">Vista testo</button>
+            <button class="btn btn-secondary" id="copyBtn">Copia</button>
+            <button class="btn btn-secondary" id="downloadTxt">.txt</button>
+            <button class="btn btn-secondary" id="downloadSrt">.srt</button>
+            <button class="btn btn-primary" id="analyzeBtn">🔍 Analizza struttura</button>
+          </div>
+        </div>
+        <div class="segments" id="segments"></div>
+        <div class="plain-text" id="plainText"></div>
+      </div>
+
+      <!-- Structure Panel -->
+      <div class="panel" id="structure-panel">
+        <div class="result-header">
+          <div class="panel-title" style="margin:0">Struttura narrativa <span>Step 3</span></div>
+          <div class="actions">
+            <button class="btn btn-secondary" id="copyStructureBtn">Copia</button>
+            <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
+          </div>
+        </div>
+        <div class="structure-legend" id="structureLegend"></div>
+        <div id="structureBlocks"></div>
+      </div>
+
+    </div><!-- /col-right -->
+  </div><!-- /tool-layout -->
 
 </div>
 
@@ -440,6 +483,19 @@ function setProgress(pct) {
   progressFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
 }
 
+// Change video button
+const changeVideoBtn = document.getElementById('changeVideoBtn');
+changeVideoBtn.addEventListener('click', () => {
+  preview.style.display = 'none';
+  preview.src = '';
+  changeVideoBtn.style.display = 'none';
+  dropEl.style.display = 'block';
+  transcribeBtn.disabled = true;
+  currentFile = null;
+  transcriptChunks = null;
+  fileInput.value = '';
+});
+
 // File handling
 dropEl.addEventListener('click', () => fileInput.click());
 dropEl.addEventListener('dragover', (e) => { e.preventDefault(); dropEl.classList.add('dragover'); });
@@ -456,7 +512,10 @@ function handleFile(file) {
   clearError();
   currentFile = file;
   preview.src = URL.createObjectURL(file);
+  // drop sparisce, video prende il suo posto
+  dropEl.style.display = 'none';
   preview.style.display = 'block';
+  changeVideoBtn.style.display = 'block';
   transcribeBtn.disabled = false;
   resultPanel.style.display = 'none';
   transcriptChunks = null;
@@ -526,8 +585,9 @@ transcribeBtn.addEventListener('click', async () => {
       : [{ timestamp: [0, null], text: output.text }];
     renderResults(transcriptChunks, output.text);
     setStatus('', false); setProgress(null);
+    const emptyState = document.getElementById('empty-state');
+    if(emptyState) emptyState.style.display = 'none';
     resultPanel.style.display = 'block';
-    resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     console.error(err);
     showError('Errore durante la trascrizione: ' + err.message);
