@@ -959,29 +959,26 @@ footer a:hover{color:var(--black)}
     return (b/(1024*1024)).toFixed(1)+'MB';
   }
 
-  function showResult(file){
+  function saveAndRedirect(file){
+    if(!file || !file.type.startsWith('video/')) return;
+    // Feedback visivo immediato
     zone.style.display='none';
     resultCard.style.display='block';
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('fileSize').textContent = formatBytes(file.size);
+    scoreDesc.textContent = 'Apertura analizzatore…';
 
-    // animate score
-    const score = Math.floor(Math.random()*25)+42; // 42–66 range: realistic "meh" score that makes them want Pro
-    let n=0;
-    const interval = setInterval(()=>{
-      n += 2;
-      if(n>=score){ n=score; clearInterval(interval); }
-      scoreNum.textContent = n+'%';
-      scoreBar.style.width = n+'%';
-      scoreBar.style.background = n<50?'#e04040':n<70?'#f0a500':'var(--green)';
-    },30);
-    setTimeout(()=>{
-      scoreDesc.textContent = score < 50
-        ? 'Low potential. The hook is weak and a clear CTA is missing.'
-        : score < 70
-        ? 'Medium potential. Good development but the opening needs rethinking.'
-        : 'Good potential. A few script tweaks can push you above 80.';
-    }, score*15+200);
+    // Salva il file in IndexedDB poi redirect
+    const req = indexedDB.open('dupy_transfer', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('files');
+    req.onsuccess = e => {
+      const db = e.target.result;
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').put(file, 'pending_video');
+      tx.oncomplete = () => { window.location.href = 'transcriptor.html'; };
+      tx.onerror = () => { scoreDesc.textContent = 'Errore nel trasferimento. Riprova.'; zone.style.display='flex'; resultCard.style.display='none'; };
+    };
+    req.onerror = () => { scoreDesc.textContent = 'Errore. Riprova.'; };
   }
 
   zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('over'); });
@@ -989,13 +986,13 @@ footer a:hover{color:var(--black)}
   zone.addEventListener('drop', e=>{
     e.preventDefault(); zone.classList.remove('over');
     const f = e.dataTransfer.files[0];
-    if(f && f.type.startsWith('video/')) showResult(f);
+    if(f && f.type.startsWith('video/')) saveAndRedirect(f);
   });
   zone.addEventListener('click', e=>{
     if(e.target.tagName==='BUTTON') return;
     input.click();
   });
-  input.addEventListener('change', ()=>{ if(input.files[0]) showResult(input.files[0]); });
+  input.addEventListener('change', ()=>{ if(input.files[0]) saveAndRedirect(input.files[0]); });
 
   resetBtn.addEventListener('click', ()=>{
     resultCard.style.display='none';
