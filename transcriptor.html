@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUPY – Video Transcriber</title>
+<meta name="description" content="Trascrizione automatica del tuo video nel browser, tramite Whisper. Nessun upload, nessun server. Analizza la struttura narrativa del tuo contenuto.">
+<link rel="preload" href="navbar.html" as="fetch" crossorigin>
+<link rel="preload" href="footer.html" as="fetch" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@1&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --black:#111;
+  --white:#fff;
+  --off:#f7f6f3;
+  --border:#e5e3de;
+  --muted:#999;
+  --green:#6100FF;
+  --green-dark:#4d00cc;
+  --green-bg:#f0eaff;
+  --mono:'Courier New',monospace;
+  --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  --danger:#e04040;
+}
+
+body{font-family:var(--sans);background:var(--white);color:var(--black);font-size:16px;line-height:1.6;overflow-x:hidden}
+
+body::before{
+  content:'';
+  position:fixed;
+  top:56px;
+  left:0;right:0;bottom:0;
+  background-image:radial-gradient(circle,#b0b0b0 1px,transparent 1px);
+  background-size:24px 24px;
+  opacity:0.4;
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* ── PAGE WRAP ── */
+.page-wrap{
+  max-width:860px;
+  margin:0 auto;
+  padding:4rem 2rem 6rem;
+}
+
+/* ── PAGE HEADER ── */
+.page-header{
+  text-align:center;
+  margin-bottom:3rem;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.45rem;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--green-dark);background:var(--green-bg);
+  padding:.3rem .8rem;border-radius:100px;margin-bottom:1.25rem;
+}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.page-header h1{
+  font-size:clamp(2rem,4.5vw,3rem);
+  font-weight:800;letter-spacing:-.04em;line-height:1.08;
+  margin-bottom:.75rem;
+}
+.page-header h1 em{
+  font-family:'DM Serif Display',Georgia,serif;
+  font-style:italic;font-weight:400;color:var(--green);
+}
+.page-header p{
+  font-size:1rem;color:#666;line-height:1.65;max-width:520px;margin:0 auto;
+}
+
+/* ── PANEL ── */
+.panel{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:16px;
+  padding:1.75rem;
+  margin-bottom:1.25rem;
+}
+.panel-title{
+  font-size:.95rem;font-weight:700;letter-spacing:-.02em;
+  margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;
+}
+.panel-title span{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--green-bg);color:var(--green-dark);
+  padding:.15rem .55rem;border-radius:4px;font-weight:700;
+}
+
+/* ── DROP ZONE ── */
+.drop{
+  border:2px dashed var(--green);
+  border-radius:12px;
+  padding:2.5rem 1.5rem;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s,background .15s;
+  background:var(--off);
+}
+.drop:hover,.drop.dragover{background:var(--green-bg);border-color:var(--green-dark)}
+.drop-icon{font-size:2rem;margin-bottom:.6rem;display:block}
+.drop strong{font-size:.95rem;font-weight:700;color:var(--black);display:block;margin-bottom:.2rem}
+.drop p{margin:0;color:var(--muted);font-size:.825rem}
+input[type=file]{display:none}
+
+video{width:100%;border-radius:10px;margin-top:1.25rem;display:block;border:1.5px solid var(--border)}
+
+/* ── CONTROLS ROW ── */
+.controls-row{
+  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;
+}
+
+select{
+  font-family:var(--sans);
+  font-size:.875rem;
+  border-radius:8px;
+  border:1.5px solid var(--border);
+  padding:.5rem .9rem;
+  background:var(--off);
+  color:var(--black);
+  cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right .75rem center;
+  padding-right:2rem;
+  transition:border-color .15s;
+  flex:1;min-width:180px;
+}
+select:focus{outline:none;border-color:var(--green)}
+
+.btn{
+  font-family:var(--sans);
+  font-size:.875rem;font-weight:700;
+  border-radius:8px;border:none;
+  padding:.55rem 1.25rem;
+  cursor:pointer;
+  transition:opacity .15s,background .15s;
+  white-space:nowrap;
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:.4rem;
+}
+.btn-primary{background:var(--black);color:var(--white)}
+.btn-primary:hover:not(:disabled){opacity:.82}
+.btn-primary:disabled{background:#ccc;color:#999;cursor:not-allowed}
+.btn-secondary{background:var(--off);color:var(--black);border:1.5px solid var(--border)}
+.btn-secondary:hover:not(:disabled){border-color:var(--green);color:var(--green-dark);background:var(--green-bg)}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:hover:not(:disabled){background:var(--green-dark)}
+.btn-green:disabled{background:#ccc;color:#999;cursor:not-allowed}
+
+/* ── STATUS ── */
+.status{
+  font-size:.825rem;color:var(--muted);
+  margin-top:1rem;
+  display:none;align-items:center;gap:.6rem;
+}
+.status.active{display:flex}
+.spinner{
+  width:14px;height:14px;
+  border:2px solid var(--border);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.progress-bar{
+  height:3px;background:var(--border);border-radius:4px;
+  overflow:hidden;margin-top:.75rem;display:none;
+}
+.progress-bar.active{display:block}
+.progress-bar-fill{
+  height:100%;background:var(--green);width:0%;transition:width .2s;
+}
+
+.error-msg{
+  color:var(--danger);font-size:.825rem;
+  margin-top:.75rem;display:none;
+  background:#fff0f0;border:1px solid #fcc;
+  padding:.6rem .9rem;border-radius:8px;
+}
+
+/* ── RESULT PANEL ── */
+#result-panel{display:none}
+.result-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;
+}
+.result-header h2{font-size:1rem;font-weight:700;letter-spacing:-.02em}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+/* ── SEGMENTS ── */
+.segments{
+  max-height:400px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:1px;
+  border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
+}
+.segment{
+  display:flex;gap:.9rem;
+  padding:.7rem 1rem;
+  cursor:pointer;align-items:baseline;
+  transition:background .1s;
+  border-bottom:1px solid var(--border);
+}
+.segment:last-child{border-bottom:none}
+.segment:hover{background:var(--green-bg)}
+.segment.playing{background:var(--green-bg);border-left:3px solid var(--green)}
+.segment .time{
+  color:var(--green);
+  font-family:var(--mono);font-size:.72rem;
+  white-space:nowrap;flex-shrink:0;width:42px;
+  padding-top:.15rem;
+}
+.segment .text{font-size:.9rem;line-height:1.55;color:#333}
+
+.plain-text{
+  font-size:.9rem;line-height:1.75;color:#333;
+  white-space:pre-wrap;display:none;
+  background:var(--off);border-radius:10px;
+  padding:1.25rem;border:1.5px solid var(--border);
+}
+
+/* ── STRUCTURE PANEL ── */
+#structure-panel{display:none}
+
+.structure-legend{
+  display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;
+}
+.legend-item{
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;
+  padding:.2rem .65rem;border-radius:100px;
+  background:var(--off);color:var(--muted);border:1px solid var(--border);
+  font-weight:600;
+}
+
+.section-block{
+  border-radius:10px;padding:1rem 1.1rem;
+  margin-bottom:.75rem;border-left:3px solid transparent;
+}
+.section-label{
+  font-family:var(--mono);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;
+}
+.section-label .badge{
+  font-size:.6rem;padding:.15rem .5rem;border-radius:20px;font-weight:700;
+}
+.section-text{font-size:.875rem;line-height:1.65;color:#333}
+.confidence{font-size:.65rem;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
+
+/* Section colors — adapted to DUPY light theme */
+.sec-hook   {background:#f5f3ff;border-color:#818cf8}
+.sec-hook   .section-label{color:#4f46e5}
+.sec-hook   .badge{background:#e0e7ff;color:#4f46e5}
+
+.sec-intro  {background:#eff6ff;border-color:#60a5fa}
+.sec-intro  .section-label{color:#2563eb}
+.sec-intro  .badge{background:#dbeafe;color:#2563eb}
+
+.sec-body   {background:#f0fdf4;border-color:#4ade80}
+.sec-body   .section-label{color:#16a34a}
+.sec-body   .badge{background:#dcfce7;color:#16a34a}
+
+.sec-bridge {background:#fffbeb;border-color:#fbbf24}
+.sec-bridge .section-label{color:#d97706}
+.sec-bridge .badge{background:#fef3c7;color:#d97706}
+
+.sec-cta    {background:#fff0f0;border-color:#f87171}
+.sec-cta    .section-label{color:#dc2626}
+.sec-cta    .badge{background:#fee2e2;color:#dc2626}
+
+.sec-outro  {background:#faf5ff;border-color:#c084fc}
+.sec-outro  .section-label{color:#9333ea}
+.sec-outro  .badge{background:#f3e8ff;color:#9333ea}
+
+.sec-unknown{background:var(--off);border-color:var(--border)}
+.sec-unknown .section-label{color:var(--muted)}
+.sec-unknown .badge{background:var(--border);color:var(--muted)}
+
+/* ── FOOTER NOTE ── */
+.footer-note{
+  color:var(--muted);font-size:.75rem;text-align:center;
+  margin-top:1.5rem;font-family:var(--mono);
+}
+
+@media(max-width:600px){
+  .page-wrap{padding:2.5rem 1.25rem 4rem}
+  .controls-row{flex-direction:column;align-items:stretch}
+  select{min-width:0}
+  .actions{gap:.35rem}
+  .btn{font-size:.8rem;padding:.45rem .9rem}
+}
+</style>
+</head>
+<body>
+
+<div data-include="navbar.html"></div>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="hero-eyebrow">Free Tool</div>
+    <h1>Video Transcriber<br><em>& Structure Analyzer.</em></h1>
+    <p>Trascrizione automatica nel browser con Whisper. Nessun upload, nessun server. Poi analizza la struttura narrativa del tuo contenuto.</p>
+  </div>
+
+  <!-- Upload Panel -->
+  <div class="panel">
+    <div class="panel-title">Carica il tuo video <span>Step 1</span></div>
+    <div class="drop" id="drop">
+      <span class="drop-icon">🎬</span>
+      <strong>Clicca per caricare o trascina qui</strong>
+      <p>MP4, WebM, MOV, MKV...</p>
+    </div>
+    <input type="file" id="fileInput" accept="video/*">
+    <video id="preview" controls style="display:none"></video>
+
+    <div class="controls-row">
+      <select id="modelSelect">
+        <option value="Xenova/whisper-tiny">Whisper Tiny — veloce, meno preciso</option>
+        <option value="Xenova/whisper-base">Whisper Base — bilanciato</option>
+        <option value="Xenova/whisper-small" selected>Whisper Small — più preciso, più lento</option>
+      </select>
+      <select id="langSelect">
+        <option value="auto">Rileva lingua automaticamente</option>
+        <option value="italian">Italiano</option>
+        <option value="english">Inglese</option>
+        <option value="spanish">Spagnolo</option>
+        <option value="french">Francese</option>
+        <option value="german">Tedesco</option>
+        <option value="portuguese">Portoghese</option>
+      </select>
+      <button class="btn btn-green" id="transcribeBtn" disabled>Trascrivi →</button>
+    </div>
+
+    <div class="status" id="status">
+      <div class="spinner"></div>
+      <span id="statusText">Caricamento modello...</span>
+    </div>
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="error-msg" id="errorBox"></div>
+  </div>
+
+  <!-- Result Panel -->
+  <div class="panel" id="result-panel">
+    <div class="result-header">
+      <div class="panel-title" style="margin:0">Trascrizione <span>Step 2</span></div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="viewToggle">Vista testo</button>
+        <button class="btn btn-secondary" id="copyBtn">Copia</button>
+        <button class="btn btn-secondary" id="downloadTxt">.txt</button>
+        <button class="btn btn-secondary" id="downloadSrt">.srt</button>
+        <button class="btn btn-primary" id="analyzeBtn">🔍 Analizza struttura</button>
+      </div>
+    </div>
+    <div class="segments" id="segments"></div>
+    <div class="plain-text" id="plainText"></div>
+  </div>
+
+  <!-- Structure Panel -->
+  <div class="panel" id="structure-panel">
+    <div class="result-header">
+      <div class="panel-title" style="margin:0">Struttura narrativa <span>Step 3</span></div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="copyStructureBtn">Copia</button>
+        <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
+      </div>
+    </div>
+    <div class="structure-legend" id="structureLegend"></div>
+    <div id="structureBlocks"></div>
+  </div>
+
+  <p class="footer-note">Il modello viene scaricato una volta sola e messo in cache dal browser. La prima trascrizione può richiedere qualche minuto.</p>
+
+</div>
+
+<div data-include="footer.html"></div>
+
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+env.allowLocalModels = false;
+
+const dropEl        = document.getElementById('drop');
+const fileInput     = document.getElementById('fileInput');
+const preview       = document.getElementById('preview');
+const transcribeBtn = document.getElementById('transcribeBtn');
+const modelSelect   = document.getElementById('modelSelect');
+const langSelect    = document.getElementById('langSelect');
+const statusEl      = document.getElementById('status');
+const statusText    = document.getElementById('statusText');
+const progressBar   = document.getElementById('progressBar');
+const progressFill  = document.getElementById('progressFill');
+const errorBox      = document.getElementById('errorBox');
+const resultPanel   = document.getElementById('result-panel');
+const segmentsEl    = document.getElementById('segments');
+const plainTextEl   = document.getElementById('plainText');
+const viewToggle    = document.getElementById('viewToggle');
+const copyBtn       = document.getElementById('copyBtn');
+const downloadTxt   = document.getElementById('downloadTxt');
+const downloadSrt   = document.getElementById('downloadSrt');
+
+let currentFile      = null;
+let transcriptChunks = null;
+let showingPlain     = false;
+let transcriber      = null;
+let currentModelId   = null;
+
+function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
+function clearError()   { errorBox.style.display = 'none'; }
+function setStatus(msg, active) { statusText.textContent = msg; statusEl.classList.toggle('active', !!active); }
+function setProgress(pct) {
+  if (pct == null) { progressBar.classList.remove('active'); return; }
+  progressBar.classList.add('active');
+  progressFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+}
+
+// File handling
+dropEl.addEventListener('click', () => fileInput.click());
+dropEl.addEventListener('dragover', (e) => { e.preventDefault(); dropEl.classList.add('dragover'); });
+dropEl.addEventListener('dragleave', () => dropEl.classList.remove('dragover'));
+dropEl.addEventListener('drop', (e) => {
+  e.preventDefault(); dropEl.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) handleFile(file); });
+
+function handleFile(file) {
+  if (!file.type.startsWith('video/')) { showError('Seleziona un file video valido.'); return; }
+  clearError();
+  currentFile = file;
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  transcribeBtn.disabled = false;
+  resultPanel.style.display = 'none';
+  transcriptChunks = null;
+}
+
+// Audio extraction
+async function extractAudioMono16k(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+  const targetRate = 16000;
+  const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * targetRate), targetRate);
+  const source = offlineCtx.createBufferSource();
+  source.buffer = decoded;
+  if (decoded.numberOfChannels > 1) {
+    const merger = offlineCtx.createChannelMerger(1);
+    const splitter = offlineCtx.createChannelSplitter(decoded.numberOfChannels);
+    source.connect(splitter);
+    const gain = offlineCtx.createGain();
+    for (let i = 0; i < decoded.numberOfChannels; i++) splitter.connect(gain, i);
+    gain.connect(offlineCtx.destination);
+  } else {
+    source.connect(offlineCtx.destination);
+  }
+  source.start(0);
+  const rendered = await offlineCtx.startRendering();
+  audioCtx.close();
+  return rendered.getChannelData(0);
+}
+
+// Model loading
+async function getTranscriber(modelId) {
+  if (transcriber && currentModelId === modelId) return transcriber;
+  setStatus('Caricamento modello ' + modelId + '...', true);
+  transcriber = await pipeline('automatic-speech-recognition', modelId, {
+    progress_callback: (data) => {
+      if (data.status === 'progress' && data.progress != null) {
+        setProgress(data.progress);
+        setStatus('Download modello: ' + Math.round(data.progress) + '%', true);
+      } else if (data.status === 'ready') {
+        setProgress(null);
+      }
+    }
+  });
+  currentModelId = modelId;
+  setProgress(null);
+  return transcriber;
+}
+
+// Transcription
+transcribeBtn.addEventListener('click', async () => {
+  if (!currentFile) return;
+  clearError();
+  transcribeBtn.disabled = true;
+  try {
+    setStatus('Estrazione audio dal video...', true);
+    const audioData = await extractAudioMono16k(currentFile);
+    const modelId = modelSelect.value;
+    const model = await getTranscriber(modelId);
+    setStatus('Trascrizione in corso... (può richiedere qualche minuto)', true);
+    const lang = langSelect.value;
+    const options = { chunk_length_s: 30, stride_length_s: 5, return_timestamps: true };
+    if (lang !== 'auto') { options.language = lang; options.task = 'transcribe'; }
+    const output = await model(audioData, options);
+    transcriptChunks = (output.chunks && output.chunks.length)
+      ? output.chunks
+      : [{ timestamp: [0, null], text: output.text }];
+    renderResults(transcriptChunks, output.text);
+    setStatus('', false); setProgress(null);
+    resultPanel.style.display = 'block';
+    resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error(err);
+    showError('Errore durante la trascrizione: ' + err.message);
+    setStatus('', false); setProgress(null);
+  } finally {
+    transcribeBtn.disabled = false;
+  }
+});
+
+function formatTime(sec) {
+  if (sec == null) return '--:--';
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function formatSrtTime(sec) {
+  if (sec == null) sec = 0;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.floor(sec % 60);
+  const ms = Math.round((sec - Math.floor(sec)) * 1000);
+  const pad = (n, l = 2) => String(n).padStart(l, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderResults(chunks, fullText) {
+  segmentsEl.innerHTML = '';
+  chunks.forEach((chunk) => {
+    const start = chunk.timestamp[0];
+    const div = document.createElement('div');
+    div.className = 'segment';
+    div.innerHTML = `<span class="time">${formatTime(start)}</span><span class="text">${escapeHtml(chunk.text.trim())}</span>`;
+    div.addEventListener('click', () => { if (start != null) { preview.currentTime = start; preview.play(); } });
+    segmentsEl.appendChild(div);
+  });
+  plainTextEl.textContent = fullText.trim();
+}
+
+preview.addEventListener('timeupdate', () => {
+  if (!transcriptChunks) return;
+  const t = preview.currentTime;
+  const segs = segmentsEl.querySelectorAll('.segment');
+  let activeIdx = -1;
+  transcriptChunks.forEach((chunk, i) => {
+    const start = chunk.timestamp[0] ?? 0, end = chunk.timestamp[1] ?? Infinity;
+    if (t >= start && t < end) activeIdx = i;
+  });
+  segs.forEach((el, i) => el.classList.toggle('playing', i === activeIdx));
+});
+
+viewToggle.addEventListener('click', () => {
+  showingPlain = !showingPlain;
+  segmentsEl.style.display = showingPlain ? 'none' : 'flex';
+  plainTextEl.style.display = showingPlain ? 'block' : 'none';
+  viewToggle.textContent = showingPlain ? 'Vista timestamp' : 'Vista testo';
+});
+
+copyBtn.addEventListener('click', async () => {
+  if (!transcriptChunks) return;
+  await navigator.clipboard.writeText(plainTextEl.textContent);
+  copyBtn.textContent = 'Copiato!';
+  setTimeout(() => copyBtn.textContent = 'Copia', 1500);
+});
+
+function downloadBlob(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+downloadTxt.addEventListener('click', () => {
+  if (!transcriptChunks) return;
+  downloadBlob(plainTextEl.textContent, 'trascrizione.txt', 'text/plain');
+});
+downloadSrt.addEventListener('click', () => {
+  if (!transcriptChunks) return;
+  let srt = '';
+  transcriptChunks.forEach((chunk, i) => {
+    const start = chunk.timestamp[0] ?? 0, end = chunk.timestamp[1] ?? (start + 3);
+    srt += `${i + 1}\n${formatSrtTime(start)} --> ${formatSrtTime(end)}\n${chunk.text.trim()}\n\n`;
+  });
+  downloadBlob(srt, 'trascrizione.srt', 'text/plain');
+});
+
+// ─── STRUCTURE ANALYSIS ENGINE ────────────────────────────────────────────────
+
+const SECTION_META = {
+  hook:       { label: 'Hook',          emoji: '🪝', cls: 'sec-hook'    },
+  intro:      { label: 'Introduzione',  emoji: '👋', cls: 'sec-intro'   },
+  problem:    { label: 'Problema',      emoji: '❓', cls: 'sec-bridge'  },
+  body:       { label: 'Corpo',         emoji: '📝', cls: 'sec-body'    },
+  bridge:     { label: 'Bridge',        emoji: '🔗', cls: 'sec-bridge'  },
+  resolution: { label: 'Risoluzione',   emoji: '✅', cls: 'sec-body'    },
+  cta:        { label: 'CTA',           emoji: '📣', cls: 'sec-cta'     },
+  outro:      { label: 'Outro',         emoji: '👏', cls: 'sec-outro'   },
+  unknown:    { label: 'Sezione',       emoji: '📄', cls: 'sec-unknown' },
+};
+
+const SEQUENCE = ['hook','intro','problem','body','bridge','resolution','cta','outro'];
+const HOOK_MAX_POS = 0.15;
+
+const SECTIONS = {
+  hook: {
+    pos: { start: 0, end: 0.20 },
+    strong: [/\bimmagina\b/i,/\bimmaginate\b/i,/\bhai mai\b/i,/\bsapevi che\b/i,/\blo sapevi\b/i,/\bcosa succederebbe\b/i,/\bcosa faresti\b/i,/\bdid you know\b/i,/\bimagine\b/i,/\bwhat if\b/i,/\bhave you ever\b/i,/\bwould you believe\b/i,/\bguess what\b/i,/\baspetta\b/i,/\bwait\b/i],
+    weak: [/\bperché\b/i,/\bcome mai\b/i,/\boggi\b/i,/\btoday\b/i,/\bstai guardando\b/i],
+  },
+  intro: {
+    pos: { start: 0.03, end: 0.30 },
+    strong: [/\bmi chiamo\b/i,/\bsono [A-Z]/i,/\bin questo video\b/i,/\bparleremo di\b/i,/\bvi parlerò di\b/i,/\bvedremo come\b/i,/\bin this video\b/i,/\bmy name is\b/i,/\bi'm going to\b/i,/\btoday (i|we|you)'?ll?\b/i,/\bthis video is about\b/i],
+    weak: [/\bcominciamo\b/i,/\biniziamo\b/i,/\blet's start\b/i,/\bprima di tutto\b/i,/\bfirst of all\b/i],
+  },
+  problem: {
+    pos: { start: 0.08, end: 0.45 },
+    strong: [/\bil problema\b/i,/\bthe problem\b/i,/\bl[' ]?issue\b/i,/\bspesso capita\b/i,/\bmolti di voi\b/i,/\bse hai mai\b/i,/\bif you('ve)? ever\b/i,/\bpurtroppo\b/i,/\bunfortunately\b/i,/\bla sfida\b/i,/\bthe challenge\b/i,/\bnon funziona\b/i,/\bdi solito\b/i,/\btipicamente\b/i,/\bmost people\b/i],
+    weak: [/\bperché\b/i,/\bwhy\b/i,/\bma\b/i,/\bbut\b/i,/\bspesso\b/i,/\boften\b/i],
+  },
+  body: { pos: { start: 0.20, end: 0.80 }, strong: [], weak: [], isDefault: true },
+  bridge: {
+    pos: { start: 0.15, end: 0.85 },
+    strong: [/\bdetto questo\b/i,/\bparlando di\b/i,/\btornando a\b/i,/\bpassando a\b/i,/\badesso vediamo\b/i,/\bora vediamo\b/i,/\bspeaking of\b/i,/\bwith that said\b/i,/\bmoving on\b/i,/\bnow let'?s\b/i,/\bthat brings us\b/i,/\bon that note\b/i,/\bcomunque\b/i,/\bdunque\b/i,/\bperò\b/i,/\bhowever\b/i],
+    weak: [/\binoltre\b/i,/\bmoreover\b/i,/\badditionally\b/i,/\banche\b/i],
+  },
+  resolution: {
+    pos: { start: 0.40, end: 0.88 },
+    strong: [/\bla soluzione\b/i,/\bthe solution\b/i,/\bcome fare\b/i,/\bhow to\b/i,/\bil trucco\b/i,/\bthe trick\b/i,/\bbasta\b/i,/\bsimply\b/i,/\bfinalmente\b/i,/\bfinally\b/i,/\bricapitolando\b/i,/\bto summarize\b/i,/\bin sintesi\b/i,/\bto recap\b/i,/\bquello che ho imparato\b/i,/\bwhat i learned\b/i,/\bfunziona così\b/i,/\bhere's how\b/i,/\bda quel momento\b/i,/\bfrom that moment\b/i,/\bce la feci\b/i],
+    weak: [/\bquindi\b/i,/\bso\b/i,/\balla fine\b/i,/\bin the end\b/i,/\bdopo\b/i,/\bafter\b/i],
+  },
+  cta: {
+    pos: { start: 0.55, end: 1.0 },
+    strong: [/\biscriviti\b/i,/\biscrivetevi\b/i,/\bmetti mi piace\b/i,/\bcondividi\b/i,/\bcommenta\b/i,/\blascia un commento\b/i,/\bseguimi\b/i,/\bseguici\b/i,/\bnotifich\b/i,/\bcampanella\b/i,/\bsubscribe\b/i,/\bfollow\b/i,/\bshare\b/i,/\bleave a comment\b/i,/\bturn on\b/i,/\bbell icon\b/i,/\bhit the\b/i,/\blink in bio\b/i,/\blink in descrizione\b/i,/\btrovi il link\b/i,/\bclicca\b/i,/\bclick\b/i,/\blike\b/i],
+    weak: [/\bfammi sapere\b/i,/\blet me know\b/i,/\bscrivimi\b/i,/\btell me\b/i,/\bdimmi\b/i],
+  },
+  outro: {
+    pos: { start: 0.75, end: 1.0 },
+    strong: [/\bci vediamo\b/i,/\balla prossima\b/i,/\ba presto\b/i,/\bgrazie per aver guardato\b/i,/\bgrazie mille\b/i,/\bsee you (next|in the)\b/i,/\bthat'?s all\b/i,/\bthat'?s it\b/i,/\bthanks for watching\b/i,/\btake care\b/i,/\bbye\b/i,/\barrivederci\b/i,/\bciao ciao\b/i,/\baddio\b/i],
+    weak: [/\bin conclusione\b/i,/\bper concludere\b/i,/\bin conclusion\b/i,/\bper finire\b/i,/\bfinally\b/i],
+  },
+};
+
+function scoreChunk(text, pos) {
+  const scores = {};
+  for (const [secId, secDef] of Object.entries(SECTIONS)) {
+    if (secDef.isDefault) continue;
+    let s = 0;
+    for (const re of (secDef.strong || [])) if (re.test(text)) s += 3;
+    for (const re of (secDef.weak   || [])) if (re.test(text)) s += 1;
+    const inWindow = pos >= secDef.pos.start && pos <= secDef.pos.end;
+    if (s > 0) s += inWindow ? 2 : -2;
+    scores[secId] = Math.max(0, s);
+  }
+  return scores;
+}
+
+function applySequenceConstraints(labeled) {
+  let maxSeqSeen = -1;
+  return labeled.map(item => {
+    const idx = SEQUENCE.indexOf(item.type);
+    if (idx === -1) return item;
+    if (idx >= maxSeqSeen) { maxSeqSeen = idx; return item; }
+    return { ...item, type: 'body', confidence: 20 };
+  });
+}
+
+function mergeConsecutive(labeled) {
+  if (!labeled.length) return labeled;
+  const merged = [{ ...labeled[0] }];
+  for (let i = 1; i < labeled.length; i++) {
+    const last = merged[merged.length - 1];
+    if (labeled[i].type === last.type) {
+      last.text += ' ' + labeled[i].text;
+      last.confidence = Math.max(last.confidence, labeled[i].confidence);
+    } else {
+      merged.push({ ...labeled[i] });
+    }
+  }
+  return merged;
+}
+
+function analyzeStructure(chunks) {
+  const total = chunks.length;
+  if (total === 0) return [];
+  const labeled = chunks.map((chunk, i) => {
+    const text = chunk.text.trim(), pos = i / total;
+    const scores = scoreChunk(text, pos);
+    const best = Object.entries(scores).reduce((a, b) => b[1] > a[1] ? b : a, ['', -1]);
+    let type, confidence;
+    if (best[1] <= 0) { type = pos < HOOK_MAX_POS ? 'hook' : 'body'; confidence = 20; }
+    else { type = best[0]; confidence = Math.min(100, Math.round((best[1] / 8) * 100)); }
+    if (type === 'hook' && pos > HOOK_MAX_POS) { type = 'intro'; confidence = 20; }
+    if (pos >= 0.25 && pos <= 0.75 && confidence < 30 && type !== 'bridge' && type !== 'problem' && type !== 'resolution') { type = 'body'; confidence = 35; }
+    return { type, text, confidence, start: chunk.timestamp?.[0] };
+  });
+  return mergeConsecutive(applySequenceConstraints(labeled));
+}
+
+function renderStructure(sections) {
+  const blocksEl = document.getElementById('structureBlocks');
+  const legendEl = document.getElementById('structureLegend');
+  blocksEl.innerHTML = ''; legendEl.innerHTML = '';
+  const usedTypes = SEQUENCE.filter(t => sections.some(s => s.type === t));
+  usedTypes.forEach(type => {
+    const m = SECTION_META[type] || SECTION_META.unknown;
+    const li = document.createElement('span');
+    li.className = 'legend-item';
+    li.textContent = `${m.emoji} ${m.label}`;
+    legendEl.appendChild(li);
+  });
+  sections.forEach(sec => {
+    const m = SECTION_META[sec.type] || SECTION_META.unknown;
+    const div = document.createElement('div');
+    div.className = `section-block ${m.cls}`;
+    const confLabel = sec.confidence >= 60 ? 'alta' : sec.confidence >= 30 ? 'media' : 'bassa';
+    div.innerHTML = `
+      <div class="section-label">
+        <span class="badge">${m.emoji} ${m.label}</span>
+        <span class="confidence">confidenza ${confLabel}</span>
+      </div>
+      <div class="section-text">${escapeHtml(sec.text)}</div>`;
+    blocksEl.appendChild(div);
+  });
+}
+
+const analyzeBtn           = document.getElementById('analyzeBtn');
+const structurePanel       = document.getElementById('structure-panel');
+const copyStructureBtn     = document.getElementById('copyStructureBtn');
+const downloadStructureBtn = document.getElementById('downloadStructureBtn');
+let currentStructure = null;
+
+analyzeBtn.addEventListener('click', () => {
+  if (!transcriptChunks) return;
+  currentStructure = analyzeStructure(transcriptChunks);
+  renderStructure(currentStructure);
+  structurePanel.style.display = 'block';
+  structurePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+copyStructureBtn.addEventListener('click', async () => {
+  if (!currentStructure) return;
+  const text = currentStructure.map(s => { const m = SECTION_META[s.type] || SECTION_META.unknown; return `[${m.label.toUpperCase()}]\n${s.text}`; }).join('\n\n');
+  await navigator.clipboard.writeText(text);
+  copyStructureBtn.textContent = 'Copiato!';
+  setTimeout(() => copyStructureBtn.textContent = 'Copia', 1500);
+});
+
+downloadStructureBtn.addEventListener('click', () => {
+  if (!currentStructure) return;
+  const text = currentStructure.map(s => { const m = SECTION_META[s.type] || SECTION_META.unknown; return `[${m.label.toUpperCase()}]\n${s.text}`; }).join('\n\n');
+  downloadBlob(text, 'struttura.txt', 'text/plain');
+});
+</script>
+
+<script src="include.js"></script>
+</body>
+</html>
