@@ -417,6 +417,22 @@ let currentModelId   = null;
 
 function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
 function clearError()   { errorBox.style.display = 'none'; }
+
+// Recupera il file passato da index.html via IndexedDB
+(function loadPendingFile(){
+  const req = indexedDB.open('dupy_transfer', 1);
+  req.onupgradeneeded = e => e.target.result.createObjectStore('files');
+  req.onsuccess = e => {
+    const db = e.target.result;
+    const tx = db.transaction('files', 'readwrite');
+    const store = tx.objectStore('files');
+    const get = store.get('pending_video');
+    get.onsuccess = () => {
+      const file = get.result;
+      if(file){ store.delete('pending_video'); handleFile(file); }
+    };
+  };
+})();
 function setStatus(msg, active) { statusText.textContent = msg; statusEl.classList.toggle('active', !!active); }
 function setProgress(pct) {
   if (pct == null) { progressBar.classList.remove('active'); return; }
