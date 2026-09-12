@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DUPY – Video Transcriber</title>
-<meta name="description" content="Trascrizione automatica del tuo video nel browser, tramite Whisper. Nessun upload, nessun server. Analizza la struttura narrativa del tuo contenuto.">
+<meta name="description" content="Automatic in-browser video transcription via Whisper. No uploads, no servers. Analyze the narrative structure of your content.">
 <link rel="preload" href="navbar.html" as="fetch" crossorigin>
 <link rel="preload" href="footer.html" as="fetch" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -422,7 +422,7 @@ select:focus{outline:none;border-color:var(--green)}
   <div class="page-header">
     <div class="hero-eyebrow">Free Tool</div>
     <h1>Video Transcriber<br><em>& Structure Analyzer.</em></h1>
-    <p>Trascrizione automatica nel browser con Whisper. Nessun upload, nessun server. Poi analizza la struttura narrativa del tuo contenuto.</p>
+    <p>Automatic in-browser transcription powered by Whisper. No uploads, no servers. Then analyze the narrative structure of your content.</p>
   </div>
 
   <div class="tool-layout">
@@ -433,34 +433,34 @@ select:focus{outline:none;border-color:var(--green)}
         <div class="panel-title">Video <span>Step 1</span></div>
         <div class="drop" id="drop">
           <span class="drop-icon">🎬</span>
-          <strong>Carica o trascina</strong>
+          <strong>Upload or drag & drop</strong>
           <p>MP4, WebM, MOV, MKV...</p>
         </div>
         <input type="file" id="fileInput" accept="video/*">
         <video id="preview" controls style="display:none"></video>
-        <button id="changeVideoBtn" style="display:none;margin-top:.6rem;background:none;border:none;font-family:var(--sans);font-size:.75rem;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">← Cambia video</button>
+        <button id="changeVideoBtn" style="display:none;margin-top:.6rem;background:none;border:none;font-family:var(--sans);font-size:.75rem;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">← Change video</button>
 
         <div class="controls-row" style="margin-top:1rem">
           <input type="hidden" id="modelSelect" value="Xenova/whisper-medium">
           <select id="langSelect">
-            <option value="auto">Lingua automatica</option>
-            <option value="it">Italiano</option>
-            <option value="en">Inglese</option>
-            <option value="es">Spagnolo</option>
-            <option value="fr">Francese</option>
-            <option value="de">Tedesco</option>
-            <option value="pt">Portoghese</option>
+            <option value="auto">Auto detect language</option>
+            <option value="it">Italian</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="pt">Portuguese</option>
           </select>
-          <button class="btn btn-green" id="transcribeBtn" disabled style="width:100%;justify-content:center">Trascrivi →</button>
+          <button class="btn btn-green" id="transcribeBtn" disabled style="width:100%;justify-content:center">Transcribe →</button>
         </div>
 
         <div class="status" id="status">
           <div class="spinner"></div>
-          <span id="statusText">Caricamento modello...</span>
+          <span id="statusText">Loading model...</span>
         </div>
         <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
         <div class="error-msg" id="errorBox"></div>
-        <p class="footer-note" style="text-align:left;margin-top:1rem">Powered by Whisper Large v3 via Groq — veloce e preciso.</p>
+
       </div>
     </div>
 
@@ -471,21 +471,21 @@ select:focus{outline:none;border-color:var(--green)}
       <div class="panel" id="empty-state">
         <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
           <div style="font-size:2.5rem;margin-bottom:.75rem">🎬</div>
-          <div style="font-weight:700;color:var(--black);margin-bottom:.35rem">Carica un video per iniziare</div>
-          <div style="font-size:.875rem">La trascrizione e la struttura narrativa appariranno qui.</div>
+          <div style="font-weight:700;color:var(--black);margin-bottom:.35rem">Upload a video to get started</div>
+          <div style="font-size:.875rem">Your transcript and narrative structure will appear here.</div>
         </div>
       </div>
 
       <!-- Result Panel -->
       <div class="panel" id="result-panel">
         <div class="result-header">
-          <div class="panel-title" style="margin:0">Trascrizione <span>Step 2</span></div>
+          <div class="panel-title" style="margin:0">Transcript <span>Step 2</span></div>
           <div class="actions">
-            <button class="btn btn-secondary" id="viewToggle">Vista testo</button>
-            <button class="btn btn-secondary" id="copyBtn">Copia</button>
+            <button class="btn btn-secondary" id="viewToggle">Plain text</button>
+            <button class="btn btn-secondary" id="copyBtn">Copy</button>
             <button class="btn btn-secondary" id="downloadTxt">.txt</button>
             <button class="btn btn-secondary" id="downloadSrt">.srt</button>
-            <button class="btn btn-primary" id="analyzeBtn">🔍 Analizza struttura</button>
+            <button class="btn btn-primary" id="analyzeBtn">🔍 Analyze structure</button>
           </div>
         </div>
         <div class="segments" id="segments"></div>
@@ -578,7 +578,7 @@ dropEl.addEventListener('drop', (e) => {
 fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) handleFile(file); });
 
 function handleFile(file) {
-  if (!file.type.startsWith('video/')) { showError('Seleziona un file video valido.'); return; }
+  if (!file.type.startsWith('video/')) { showError('Please select a valid video file.'); return; }
   clearError();
   currentFile = file;
   preview.src = URL.createObjectURL(file);
@@ -669,12 +669,12 @@ transcribeBtn.addEventListener('click', async () => {
   clearError();
   transcribeBtn.disabled = true;
   try {
-    setStatus('Estrazione audio dal video...', true);
+    setStatus('Extracting audio from video...', true);
     setProgress(10);
     const audioBlob = await extractAudioMono16k(currentFile);
 
     setProgress(40);
-    setStatus('Trascrizione in corso con Whisper Large v3...', true);
+    setStatus('Transcribing with Whisper Large v3...', true);
 
     const lang = langSelect.value;
     const formData = new FormData();
@@ -688,7 +688,7 @@ transcribeBtn.addEventListener('click', async () => {
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error || 'Errore dal server');
+      throw new Error(err.error || 'Server error');
     }
 
     const output = await response.json();
@@ -712,7 +712,7 @@ transcribeBtn.addEventListener('click', async () => {
     resultPanel.style.display = 'block';
   } catch (err) {
     console.error(err);
-    showError('Errore durante la trascrizione: ' + err.message);
+    showError('Transcription error: ' + err.message);
     setStatus('', false); setProgress(null);
   } finally {
     transcribeBtn.disabled = false;
@@ -769,14 +769,14 @@ viewToggle.addEventListener('click', () => {
   showingPlain = !showingPlain;
   segmentsEl.style.display = showingPlain ? 'none' : 'flex';
   plainTextEl.style.display = showingPlain ? 'block' : 'none';
-  viewToggle.textContent = showingPlain ? 'Vista timestamp' : 'Vista testo';
+  viewToggle.textContent = showingPlain ? 'Timestamps' : 'Plain text';
 });
 
 copyBtn.addEventListener('click', async () => {
   if (!transcriptChunks) return;
   await navigator.clipboard.writeText(plainTextEl.textContent);
-  copyBtn.textContent = 'Copiato!';
-  setTimeout(() => copyBtn.textContent = 'Copia', 1500);
+  copyBtn.textContent = 'Copied!';
+  setTimeout(() => copyBtn.textContent = 'Copy', 1500);
 });
 
 function downloadBlob(content, filename, type) {
@@ -788,7 +788,7 @@ function downloadBlob(content, filename, type) {
 
 downloadTxt.addEventListener('click', () => {
   if (!transcriptChunks) return;
-  downloadBlob(plainTextEl.textContent, 'trascrizione.txt', 'text/plain');
+  downloadBlob(plainTextEl.textContent, 'transcript.txt', 'text/plain');
 });
 downloadSrt.addEventListener('click', () => {
   if (!transcriptChunks) return;
@@ -797,7 +797,7 @@ downloadSrt.addEventListener('click', () => {
     const start = chunk.timestamp[0] ?? 0, end = chunk.timestamp[1] ?? (start + 3);
     srt += `${i + 1}\n${formatSrtTime(start)} --> ${formatSrtTime(end)}\n${(chunk.text || '').trim()}\n\n`;
   });
-  downloadBlob(srt, 'trascrizione.srt', 'text/plain');
+  downloadBlob(srt, 'transcript.srt', 'text/plain');
 });
 
 // ─── STRUCTURE ANALYSIS ENGINE ────────────────────────────────────────────────
