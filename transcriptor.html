@@ -434,11 +434,7 @@ select:focus{outline:none;border-color:var(--green)}
         <button id="changeVideoBtn" style="display:none;margin-top:.6rem;background:none;border:none;font-family:var(--sans);font-size:.75rem;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">← Cambia video</button>
 
         <div class="controls-row" style="margin-top:1rem">
-          <select id="modelSelect">
-            <option value="Xenova/whisper-tiny">Whisper Tiny — veloce</option>
-            <option value="Xenova/whisper-base">Whisper Base — bilanciato</option>
-            <option value="Xenova/whisper-small" selected>Whisper Small — preciso</option>
-          </select>
+          <input type="hidden" id="modelSelect" value="Xenova/whisper-medium">
           <select id="langSelect">
             <option value="auto">Lingua automatica</option>
             <option value="italian">Italiano</option>
@@ -457,7 +453,7 @@ select:focus{outline:none;border-color:var(--green)}
         </div>
         <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
         <div class="error-msg" id="errorBox"></div>
-        <p class="footer-note" style="text-align:left;margin-top:1rem">Modello scaricato una volta sola, poi in cache.</p>
+        <p class="footer-note" style="text-align:left;margin-top:1rem">Whisper Medium (~780MB) — scaricato una volta sola, poi in cache.</p>
       </div>
     </div>
 
