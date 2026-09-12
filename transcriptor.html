@@ -265,83 +265,77 @@ select:focus{outline:none;border-color:var(--green)}
 
 /* ── NODE GRAPH ── */
 .node-graph{
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  gap:0;
-  padding:0 .5rem;
-}
-
-.node-row{
-  display:grid;
-  grid-template-columns:56px 1fr;
-  gap:0;
   position:relative;
+  padding:0 .25rem;
 }
 
-/* The vertical connector spine */
-.node-spine{
+/* SVG overlay for bezier connectors */
+.node-graph-svg{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  overflow:visible;
+  z-index:0;
+}
+
+/* Each section = node-item stacked vertically */
+.node-item{
+  position:relative;
+  z-index:1;
   display:flex;
   flex-direction:column;
   align-items:center;
-  position:relative;
-  padding:0;
+  margin-bottom:2rem;
 }
+.node-item:last-child{margin-bottom:0}
 
-.node-dot{
-  width:20px;height:20px;
+/* The central node circle */
+.node-circle{
+  width:52px;height:52px;
   border-radius:50%;
   border:2.5px solid;
   background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
   flex-shrink:0;
   position:relative;
   z-index:2;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.7rem;
-  margin-top:.9rem;
-  box-shadow:0 0 0 4px #fff;
-  transition:transform .15s;
-}
-.node-row:hover .node-dot{transform:scale(1.18)}
-
-/* Line below the dot (connects to next node) */
-.node-line{
-  flex:1;
-  width:2px;
-  background:linear-gradient(to bottom, currentColor 0%, transparent 100%);
-  opacity:.22;
-  min-height:1rem;
-}
-.node-row:last-child .node-line{display:none}
-
-/* Node card */
-.node-card{
-  border-radius:10px;
-  padding:.9rem 1.1rem;
-  margin:.5rem 0 .5rem .75rem;
-  border:1.5px solid transparent;
+  box-shadow:0 0 0 5px #fff, 0 2px 12px rgba(0,0,0,.08);
+  transition:transform .2s, box-shadow .2s;
   cursor:default;
-  transition:box-shadow .15s, transform .12s;
-  position:relative;
+  margin-bottom:.75rem;
 }
-.node-card:hover{
-  box-shadow:0 4px 18px rgba(0,0,0,.07);
-  transform:translateX(2px);
+.node-item:hover .node-circle{
+  transform:scale(1.1);
+  box-shadow:0 0 0 5px #fff, 0 4px 20px rgba(0,0,0,.14);
 }
 
-/* Horizontal connector from spine to card */
-.node-card::before{
-  content:'';
-  position:absolute;
-  left:-12px;top:50%;
-  width:12px;height:2px;
-  background:var(--connector-color,var(--border));
-  opacity:.4;
-  transform:translateY(-50%);
+/* Node label pill */
+.node-label{
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:.22rem .7rem;border-radius:100px;
+  margin-bottom:.65rem;
+  border:1.5px solid;
+}
+
+/* The text card below node */
+.node-card{
+  width:100%;
+  border-radius:12px;
+  padding:1rem 1.15rem;
+  border:1.5px solid transparent;
+  background:#fff;
+  transition:box-shadow .15s, transform .12s;
+  cursor:default;
+}
+.node-item:hover .node-card{
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  transform:translateY(-1px);
 }
 
 .section-label{
-  font-family:var(--mono);font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   margin-bottom:.45rem;display:flex;align-items:center;gap:.5rem;
 }
 .section-label .badge{
@@ -351,45 +345,45 @@ select:focus{outline:none;border-color:var(--green)}
 .confidence{font-size:.62rem;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
 
 /* Section colors */
-.sec-hook   .node-card{background:#f5f3ff;border-color:#818cf8;--connector-color:#818cf8}
-.sec-hook   .node-dot{border-color:#818cf8;color:#818cf8}
-.sec-hook   .node-line{color:#818cf8}
+.sec-hook   .node-circle{border-color:#818cf8;color:#818cf8}
+.sec-hook   .node-label{border-color:#818cf8;background:#f0eeff;color:#4f46e5}
+.sec-hook   .node-card{background:#f5f3ff;border-color:#c7d2fe}
 .sec-hook   .section-label{color:#4f46e5}
 .sec-hook   .badge{background:#e0e7ff;color:#4f46e5}
 
-.sec-intro  .node-card{background:#eff6ff;border-color:#60a5fa;--connector-color:#60a5fa}
-.sec-intro  .node-dot{border-color:#60a5fa;color:#60a5fa}
-.sec-intro  .node-line{color:#60a5fa}
+.sec-intro  .node-circle{border-color:#60a5fa;color:#60a5fa}
+.sec-intro  .node-label{border-color:#60a5fa;background:#eff6ff;color:#2563eb}
+.sec-intro  .node-card{background:#eff6ff;border-color:#bfdbfe}
 .sec-intro  .section-label{color:#2563eb}
 .sec-intro  .badge{background:#dbeafe;color:#2563eb}
 
-.sec-body   .node-card{background:#f0fdf4;border-color:#4ade80;--connector-color:#4ade80}
-.sec-body   .node-dot{border-color:#4ade80;color:#4ade80}
-.sec-body   .node-line{color:#4ade80}
+.sec-body   .node-circle{border-color:#4ade80;color:#4ade80}
+.sec-body   .node-label{border-color:#4ade80;background:#f0fdf4;color:#16a34a}
+.sec-body   .node-card{background:#f0fdf4;border-color:#bbf7d0}
 .sec-body   .section-label{color:#16a34a}
 .sec-body   .badge{background:#dcfce7;color:#16a34a}
 
-.sec-bridge .node-card{background:#fffbeb;border-color:#fbbf24;--connector-color:#fbbf24}
-.sec-bridge .node-dot{border-color:#fbbf24;color:#fbbf24}
-.sec-bridge .node-line{color:#fbbf24}
+.sec-bridge .node-circle{border-color:#fbbf24;color:#fbbf24}
+.sec-bridge .node-label{border-color:#fbbf24;background:#fffbeb;color:#d97706}
+.sec-bridge .node-card{background:#fffbeb;border-color:#fde68a}
 .sec-bridge .section-label{color:#d97706}
 .sec-bridge .badge{background:#fef3c7;color:#d97706}
 
-.sec-cta    .node-card{background:#fff0f0;border-color:#f87171;--connector-color:#f87171}
-.sec-cta    .node-dot{border-color:#f87171;color:#f87171}
-.sec-cta    .node-line{color:#f87171}
+.sec-cta    .node-circle{border-color:#f87171;color:#f87171}
+.sec-cta    .node-label{border-color:#f87171;background:#fff0f0;color:#dc2626}
+.sec-cta    .node-card{background:#fff0f0;border-color:#fecaca}
 .sec-cta    .section-label{color:#dc2626}
 .sec-cta    .badge{background:#fee2e2;color:#dc2626}
 
-.sec-outro  .node-card{background:#faf5ff;border-color:#c084fc;--connector-color:#c084fc}
-.sec-outro  .node-dot{border-color:#c084fc;color:#c084fc}
-.sec-outro  .node-line{color:#c084fc}
+.sec-outro  .node-circle{border-color:#c084fc;color:#c084fc}
+.sec-outro  .node-label{border-color:#c084fc;background:#faf5ff;color:#9333ea}
+.sec-outro  .node-card{background:#faf5ff;border-color:#e9d5ff}
 .sec-outro  .section-label{color:#9333ea}
 .sec-outro  .badge{background:#f3e8ff;color:#9333ea}
 
+.sec-unknown .node-circle{border-color:var(--border);color:var(--muted)}
+.sec-unknown .node-label{border-color:var(--border);background:var(--off);color:var(--muted)}
 .sec-unknown .node-card{background:var(--off);border-color:var(--border)}
-.sec-unknown .node-dot{border-color:var(--border);color:var(--muted)}
-.sec-unknown .node-line{color:var(--muted)}
 .sec-unknown .section-label{color:var(--muted)}
 .sec-unknown .badge{background:var(--border);color:var(--muted)}
 
@@ -890,43 +884,97 @@ function renderStructure(sections) {
     legendEl.appendChild(li);
   });
 
-  // Node graph
+  // Node graph container
   const graph = document.createElement('div');
   graph.className = 'node-graph';
 
+  // SVG overlay for bezier curves (drawn after layout)
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('node-graph-svg');
+  graph.appendChild(svg);
+
+  // Build node items
+  const nodeItems = [];
   sections.forEach((sec, idx) => {
     const m = SECTION_META[sec.type] || SECTION_META.unknown;
     const confLabel = sec.confidence >= 60 ? 'alta' : sec.confidence >= 30 ? 'media' : 'bassa';
-    const isLast = idx === sections.length - 1;
 
-    const row = document.createElement('div');
-    row.className = `node-row ${m.cls}`;
+    // Node color (border-color of circle) — extract from CSS class convention
+    const colorMap = {
+      hook:'#818cf8', intro:'#60a5fa', body:'#4ade80',
+      bridge:'#fbbf24', resolution:'#4ade80', cta:'#f87171', outro:'#c084fc', unknown:'#ccc'
+    };
+    const nodeColor = colorMap[sec.type] || '#ccc';
 
-    // Spine column: dot + line
-    const spine = document.createElement('div');
-    spine.className = 'node-spine';
-    spine.innerHTML = `
-      <div class="node-dot">${m.emoji}</div>
-      ${!isLast ? '<div class="node-line"></div>' : ''}
-    `;
+    const item = document.createElement('div');
+    item.className = `node-item ${m.cls}`;
+    item.dataset.nodeColor = nodeColor;
 
-    // Card column
-    const card = document.createElement('div');
-    card.className = 'node-card';
-    card.innerHTML = `
-      <div class="section-label">
-        <span class="badge">${m.label}</span>
-        <span class="confidence">confidenza ${confLabel}</span>
+    item.innerHTML = `
+      <div class="node-circle">${m.emoji}</div>
+      <div class="node-label">${m.label}</div>
+      <div class="node-card">
+        <div class="section-label">
+          <span class="badge">${m.label}</span>
+          <span class="confidence">confidenza ${confLabel}</span>
+        </div>
+        <div class="section-text">${escapeHtml(sec.text)}</div>
       </div>
-      <div class="section-text">${escapeHtml(sec.text)}</div>
     `;
 
-    row.appendChild(spine);
-    row.appendChild(card);
-    graph.appendChild(row);
+    graph.appendChild(item);
+    nodeItems.push(item);
   });
 
   blocksEl.appendChild(graph);
+
+  // Draw bezier curves after layout is computed
+  requestAnimationFrame(() => {
+    const graphRect = graph.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${graph.offsetWidth} ${graph.offsetHeight}`);
+    svg.setAttribute('width', graph.offsetWidth);
+    svg.setAttribute('height', graph.offsetHeight);
+
+    for (let i = 0; i < nodeItems.length - 1; i++) {
+      const circleA = nodeItems[i].querySelector('.node-circle');
+      const circleB = nodeItems[i + 1].querySelector('.node-circle');
+      const cardA   = nodeItems[i].querySelector('.node-card');
+      const color   = nodeItems[i].dataset.nodeColor;
+
+      const rA = circleA.getBoundingClientRect();
+      const rB = circleB.getBoundingClientRect();
+      const rCard = cardA.getBoundingClientRect();
+
+      // Center-bottom of circle A, center-top of circle B, relative to graph
+      const x1 = rA.left + rA.width / 2  - graphRect.left;
+      const y1 = rCard.bottom             - graphRect.top + 12;   // from bottom of card
+      const x2 = rB.left + rB.width / 2  - graphRect.left;
+      const y2 = rB.top                   - graphRect.top - 8;    // to top of next circle
+
+      // Control points for a smooth S-curve
+      const cp1x = x1 + (x2 - x1) * 0.1;
+      const cp1y = y1 + (y2 - y1) * 0.4;
+      const cp2x = x2 - (x2 - x1) * 0.1;
+      const cp2y = y2 - (y2 - y1) * 0.4;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-dasharray', '5 4');
+      path.setAttribute('opacity', '0.45');
+      svg.appendChild(path);
+
+      // Small dot at connection points
+      [{ x: x1, y: y1 }, { x: x2, y: y2 }].forEach(pt => {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y); dot.setAttribute('r', '3');
+        dot.setAttribute('fill', color); dot.setAttribute('opacity', '0.5');
+        svg.appendChild(dot);
+      });
+    }
+  });
 }
 
 const analyzeBtn           = document.getElementById('analyzeBtn');
