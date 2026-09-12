@@ -373,6 +373,27 @@ select:focus{outline:none;border-color:var(--green)}
 .sec-unknown .section-label{color:var(--muted)}
 .sec-unknown .badge{background:var(--border);color:var(--muted)}
 
+/* ── FRAMEWORK TABS ── */
+.framework-tabs{
+  display:flex;flex-wrap:wrap;gap:.4rem;
+  margin-bottom:1.25rem;
+}
+.fw-tab{
+  font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:.3rem .8rem;border-radius:100px;
+  border:1.5px solid var(--border);
+  background:var(--off);color:var(--muted);
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:.35rem;
+}
+.fw-tab:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-bg)}
+.fw-tab.active{background:var(--black);color:#fff;border-color:var(--black)}
+.fw-tab .fw-auto-badge{
+  font-size:.55rem;background:var(--green);color:#fff;
+  padding:.05rem .35rem;border-radius:20px;letter-spacing:.04em;
+  font-weight:700;
+}
+
 /* ── FOOTER NOTE ── */
 .footer-note{
   color:var(--muted);font-size:.75rem;text-align:center;
@@ -474,12 +495,13 @@ select:focus{outline:none;border-color:var(--green)}
       <!-- Structure Panel -->
       <div class="panel" id="structure-panel">
         <div class="result-header">
-          <div class="panel-title" style="margin:0">Struttura narrativa <span>Step 3</span></div>
+          <div class="panel-title" style="margin:0">Narrative Structure <span>Step 3</span></div>
           <div class="actions">
-            <button class="btn btn-secondary" id="copyStructureBtn">Copia</button>
+            <button class="btn btn-secondary" id="copyStructureBtn">Copy</button>
             <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
           </div>
         </div>
+        <div class="framework-tabs" id="frameworkTabs"></div>
         <div class="structure-legend" id="structureLegend"></div>
         <div id="structureBlocks"></div>
       </div>
@@ -780,83 +802,147 @@ downloadSrt.addEventListener('click', () => {
 
 // ─── STRUCTURE ANALYSIS ENGINE ────────────────────────────────────────────────
 
-const SECTION_META = {
-  hook:       { label: 'Hook',          emoji: '🪝', cls: 'sec-hook'    },
-  intro:      { label: 'Introduzione',  emoji: '👋', cls: 'sec-intro'   },
-  problem:    { label: 'Problema',      emoji: '❓', cls: 'sec-bridge'  },
-  body:       { label: 'Corpo',         emoji: '📝', cls: 'sec-body'    },
-  bridge:     { label: 'Bridge',        emoji: '🔗', cls: 'sec-bridge'  },
-  resolution: { label: 'Risoluzione',   emoji: '✅', cls: 'sec-body'    },
-  cta:        { label: 'CTA',           emoji: '📣', cls: 'sec-cta'     },
-  outro:      { label: 'Outro',         emoji: '👏', cls: 'sec-outro'   },
-  unknown:    { label: 'Sezione',       emoji: '📄', cls: 'sec-unknown' },
+// ── Shared signals (language-agnostic patterns) ──
+const SIG = {
+  hook:        [/\bimmagina\b/i,/\bhave you ever\b/i,/\bdid you know\b/i,/\bwhat if\b/i,/\bimagine\b/i,/\bguess what\b/i,/\bhai mai\b/i,/\bsapevi che\b/i,/\blo sapevi\b/i,/\baspetta\b/i,/\bwait\b/i,/\bwould you believe\b/i,/\bstop scrolling\b/i,/\bsmettila\b/i],
+  problem:     [/\bil problema\b/i,/\bthe problem\b/i,/\bpurtroppo\b/i,/\bunfortunately\b/i,/\bspesso capita\b/i,/\bmolti di voi\b/i,/\bmost people\b/i,/\bla sfida\b/i,/\bthe challenge\b/i,/\bnon funziona\b/i,/\bif you('ve)? ever\b/i,/\bse hai mai\b/i,/\bfrustr/i,/\bstress/i,/\bdifficolt/i,/\bstruggle\b/i],
+  agitation:   [/\bcosta\b/i,/\bpaghi\b/i,/\bperdi\b/i,/\byou lose\b/i,/\byou waste\b/i,/\bspread\b/i,/\brisk\b/i,/\brischio\b/i,/\bdangerous\b/i,/\bpericoloso\b/i,/\bworse\b/i,/\bpeggior\b/i,/\bgetting worse\b/i,/\bsta peggiorando\b/i],
+  solution:    [/\bla soluzione\b/i,/\bthe solution\b/i,/\bcome fare\b/i,/\bhow to\b/i,/\bil trucco\b/i,/\bthe trick\b/i,/\bbasta\b/i,/\bsimply\b/i,/\bfinalmente\b/i,/\bfinally\b/i,/\bthe answer\b/i,/\bla risposta\b/i,/\bfunziona così\b/i,/\bhere'?s how\b/i,/\bthe secret\b/i,/\bil segreto\b/i],
+  attention:   [/\bascolta\b/i,/\blisten\b/i,/\bguarda\b/i,/\blook\b/i,/\bimportante\b/i,/\bimportant\b/i,/\bcritical\b/i,/\bcritico\b/i,/\battention\b/i,/\battenzione\b/i],
+  interest:    [/\bperché funziona\b/i,/\bwhy it works\b/i,/\bstudi\b/i,/\bstud(y|ies)\b/i,/\bricerca\b/i,/\bresearch\b/i,/\bdati\b/i,/\bdata\b/i,/\bstatistica\b/i,/\bstatistics\b/i,/\bnumeri\b/i,/\bnumbers\b/i],
+  desire:      [/\bimmagina(ti)?\b/i,/\bimagine\b/i,/\bpotresti\b/i,/\byou could\b/i,/\byou would\b/i,/\bpotresti avere\b/i,/\bfinalmente\b/i,/\bfinally\b/i,/\bsogno\b/i,/\bdream\b/i,/\blibertà\b/i,/\bfreedom\b/i,/\bvita migliore\b/i,/\bbetter life\b/i],
+  action:      [/\biscriviti\b/i,/\bsubscribe\b/i,/\bclicca\b/i,/\bclick\b/i,/\bscarica\b/i,/\bdownload\b/i,/\bprova\b/i,/\btry\b/i,/\binizia\b/i,/\bstart\b/i,/\bcompra\b/i,/\bbuy\b/i,/\blink in bio\b/i,/\blink in descrizione\b/i,/\bcomment(a)?\b/i,/\blike\b/i,/\bcondividi\b/i,/\bshare\b/i,/\bseguimi\b/i,/\bfollow\b/i],
+  intro:       [/\bmi chiamo\b/i,/\bmy name is\b/i,/\bin questo video\b/i,/\bin this video\b/i,/\bparleremo di\b/i,/\bi('m going to| will)\b/i,/\btoday (i|we)\b/i,/\boggi (ti|vi|parleremo)\b/i,/\bvedremo come\b/i,/\bwe('ll| will) (see|look|cover)\b/i],
+  step:        [/\bstep [0-9]/i,/\bpasso [0-9]/i,/\bprimo\b/i,/\bfirst\b/i,/\bsecondo\b/i,/\bsecond\b/i,/\bterzo\b/i,/\bthird\b/i,/\binfine\b/i,/\blastly\b/i,/\bnumero [0-9]\b/i,/\bnumber [0-9]\b/i,/\b[0-9]\.\s/],
+  story:       [/\bera una volta\b/i,/\bonce upon\b/i,/\bricordo quando\b/i,/\bi remember when\b/i,/\baccadde\b/i,/\bit happened\b/i,/\bun giorno\b/i,/\bone day\b/i,/\bda piccolo\b/i,/\bgrowing up\b/i,/\bla mia storia\b/i,/\bmy story\b/i],
+  conflict:    [/\bma poi\b/i,/\bbut then\b/i,/\btutto cambiò\b/i,/\beverything changed\b/i,/\bun momento\b/i,/\ba moment\b/i,/\bsvolta\b/i,/\bturning point\b/i,/\bcrisi\b/i,/\bcrisis\b/i,/\bpoint where\b/i,/\bil punto in cui\b/i],
+  lesson:      [/\bho imparato\b/i,/\bi learned\b/i,/\bla lezione\b/i,/\bthe lesson\b/i,/\bcapii che\b/i,/\bi realized\b/i,/\bmi rese conto\b/i,/\bwhat this taught me\b/i,/\bquello che ho capito\b/i],
+  concept:     [/\bcos'?è\b/i,/\bwhat is\b/i,/\bdefinizione\b/i,/\bdefinition\b/i,/\bsignifica\b/i,/\bit means\b/i,/\bper esempio\b/i,/\bfor example\b/i,/\bpensiamo a\b/i,/\bthink of it as\b/i,/\banalogamente\b/i,/\banalogously\b/i],
+  recap:       [/\bricapitolando\b/i,/\bto recap\b/i,/\bin sintesi\b/i,/\bin summary\b/i,/\bquindi abbiamo visto\b/i,/\bso we'?ve seen\b/i,/\bin conclusione\b/i,/\bin conclusion\b/i,/\bto summarize\b/i,/\bper riassumere\b/i],
+  outro:       [/\bci vediamo\b/i,/\bsee you\b/i,/\balla prossima\b/i,/\bnext time\b/i,/\bgrazie\b/i,/\bthanks\b/i,/\bthank you\b/i,/\barrivederci\b/i,/\bciao ciao\b/i,/\bbye\b/i,/\btake care\b/i,/\bthat'?s (all|it)\b/i],
+  transition:  [/\bdetto questo\b/i,/\bwith that said\b/i,/\bpassando a\b/i,/\bmoving on\b/i,/\bnow let'?s\b/i,/\bora vediamo\b/i,/\bthat brings us\b/i,/\bcomunque\b/i,/\bhowever\b/i,/\bperò\b/i],
 };
 
-const SEQUENCE = ['hook','intro','problem','body','bridge','resolution','cta','outro'];
-const HOOK_MAX_POS = 0.15;
+function matchSig(text, keys) {
+  let score = 0;
+  for (const k of keys) for (const re of (SIG[k] || [])) if (re.test(text)) score++;
+  return score;
+}
 
-const SECTIONS = {
-  hook: {
-    pos: { start: 0, end: 0.20 },
-    strong: [/\bimmagina\b/i,/\bimmaginate\b/i,/\bhai mai\b/i,/\bsapevi che\b/i,/\blo sapevi\b/i,/\bcosa succederebbe\b/i,/\bcosa faresti\b/i,/\bdid you know\b/i,/\bimagine\b/i,/\bwhat if\b/i,/\bhave you ever\b/i,/\bwould you believe\b/i,/\bguess what\b/i,/\baspetta\b/i,/\bwait\b/i],
-    weak: [/\bperché\b/i,/\bcome mai\b/i,/\boggi\b/i,/\btoday\b/i,/\bstai guardando\b/i],
+// ── Framework definitions ──
+const FRAMEWORKS = {
+  pas: {
+    label: 'PAS',
+    description: 'Problem → Agitate → Solution',
+    emoji: '🎯',
+    // global fit score: how PAS-like is this transcript?
+    fitScore(fullText) {
+      return matchSig(fullText, ['problem','agitation','solution']) * 2
+           + matchSig(fullText, ['hook','action']);
+    },
+    sequence: ['hook','problem','agitation','solution','action','outro'],
+    sections: {
+      hook:      { label:'Hook',      emoji:'🪝', cls:'sec-hook',    pos:[0,0.18],   keys:['hook'],              weight:3 },
+      problem:   { label:'Problem',   emoji:'❓', cls:'sec-bridge',  pos:[0.05,0.45],keys:['problem'],           weight:3 },
+      agitation: { label:'Agitate',   emoji:'🔥', cls:'sec-bridge',  pos:[0.20,0.65],keys:['agitation','problem'],weight:2 },
+      solution:  { label:'Solution',  emoji:'✅', cls:'sec-body',    pos:[0.40,0.90],keys:['solution'],          weight:3 },
+      action:    { label:'CTA',       emoji:'📣', cls:'sec-cta',     pos:[0.60,1.0], keys:['action'],            weight:3 },
+      outro:     { label:'Outro',     emoji:'👏', cls:'sec-outro',   pos:[0.80,1.0], keys:['outro'],             weight:2 },
+    },
+    default(pos) { return pos < 0.15 ? 'hook' : pos < 0.5 ? 'problem' : 'solution'; },
   },
-  intro: {
-    pos: { start: 0.03, end: 0.30 },
-    strong: [/\bmi chiamo\b/i,/\bsono [A-Z]/i,/\bin questo video\b/i,/\bparleremo di\b/i,/\bvi parlerò di\b/i,/\bvedremo come\b/i,/\bin this video\b/i,/\bmy name is\b/i,/\bi'm going to\b/i,/\btoday (i|we|you)'?ll?\b/i,/\bthis video is about\b/i],
-    weak: [/\bcominciamo\b/i,/\biniziamo\b/i,/\blet's start\b/i,/\bprima di tutto\b/i,/\bfirst of all\b/i],
+  aida: {
+    label: 'AIDA',
+    description: 'Attention → Interest → Desire → Action',
+    emoji: '📈',
+    fitScore(fullText) {
+      return matchSig(fullText, ['attention','interest','desire','action']) * 2
+           + matchSig(fullText, ['hook']);
+    },
+    sequence: ['attention','interest','desire','action','outro'],
+    sections: {
+      attention: { label:'Attention', emoji:'👀', cls:'sec-hook',    pos:[0,0.25],   keys:['attention','hook'],   weight:3 },
+      interest:  { label:'Interest',  emoji:'🧠', cls:'sec-intro',   pos:[0.15,0.50],keys:['interest','concept'], weight:3 },
+      desire:    { label:'Desire',    emoji:'💜', cls:'sec-body',    pos:[0.35,0.75],keys:['desire','solution'],  weight:3 },
+      action:    { label:'Action',    emoji:'📣', cls:'sec-cta',     pos:[0.60,1.0], keys:['action'],             weight:3 },
+      outro:     { label:'Outro',     emoji:'👏', cls:'sec-outro',   pos:[0.80,1.0], keys:['outro'],              weight:2 },
+    },
+    default(pos) { return pos < 0.25 ? 'attention' : pos < 0.5 ? 'interest' : pos < 0.75 ? 'desire' : 'action'; },
   },
-  problem: {
-    pos: { start: 0.08, end: 0.45 },
-    strong: [/\bil problema\b/i,/\bthe problem\b/i,/\bl[' ]?issue\b/i,/\bspesso capita\b/i,/\bmolti di voi\b/i,/\bse hai mai\b/i,/\bif you('ve)? ever\b/i,/\bpurtroppo\b/i,/\bunfortunately\b/i,/\bla sfida\b/i,/\bthe challenge\b/i,/\bnon funziona\b/i,/\bdi solito\b/i,/\btipicamente\b/i,/\bmost people\b/i],
-    weak: [/\bperché\b/i,/\bwhy\b/i,/\bma\b/i,/\bbut\b/i,/\bspesso\b/i,/\boften\b/i],
+  tutorial: {
+    label: 'Tutorial',
+    description: 'Hook → Intro → Steps → Recap → CTA',
+    emoji: '📚',
+    fitScore(fullText) {
+      return matchSig(fullText, ['step','intro','recap']) * 3
+           + matchSig(fullText, ['concept','solution']);
+    },
+    sequence: ['hook','intro','step','concept','recap','action','outro'],
+    sections: {
+      hook:    { label:'Hook',      emoji:'🪝', cls:'sec-hook',  pos:[0,0.15],   keys:['hook'],              weight:3 },
+      intro:   { label:'Intro',     emoji:'👋', cls:'sec-intro', pos:[0.05,0.30],keys:['intro'],             weight:3 },
+      concept: { label:'Concept',   emoji:'💡', cls:'sec-body',  pos:[0.15,0.60],keys:['concept','interest'],weight:2 },
+      step:    { label:'Step',      emoji:'🔢', cls:'sec-body',  pos:[0.20,0.85],keys:['step'],              weight:3 },
+      recap:   { label:'Recap',     emoji:'📋', cls:'sec-bridge',pos:[0.65,0.90],keys:['recap'],             weight:3 },
+      action:  { label:'CTA',       emoji:'📣', cls:'sec-cta',   pos:[0.75,1.0], keys:['action'],            weight:3 },
+      outro:   { label:'Outro',     emoji:'👏', cls:'sec-outro', pos:[0.85,1.0], keys:['outro'],             weight:2 },
+    },
+    default(pos) { return pos < 0.12 ? 'hook' : pos < 0.25 ? 'intro' : pos < 0.75 ? 'step' : pos < 0.88 ? 'recap' : 'outro'; },
   },
-  body: { pos: { start: 0.20, end: 0.80 }, strong: [], weak: [], isDefault: true },
-  bridge: {
-    pos: { start: 0.15, end: 0.85 },
-    strong: [/\bdetto questo\b/i,/\bparlando di\b/i,/\btornando a\b/i,/\bpassando a\b/i,/\badesso vediamo\b/i,/\bora vediamo\b/i,/\bspeaking of\b/i,/\bwith that said\b/i,/\bmoving on\b/i,/\bnow let'?s\b/i,/\bthat brings us\b/i,/\bon that note\b/i,/\bcomunque\b/i,/\bdunque\b/i,/\bperò\b/i,/\bhowever\b/i],
-    weak: [/\binoltre\b/i,/\bmoreover\b/i,/\badditionally\b/i,/\banche\b/i],
+  story: {
+    label: 'Storytelling',
+    description: 'Hook → Setup → Conflict → Resolution → Lesson',
+    emoji: '📖',
+    fitScore(fullText) {
+      return matchSig(fullText, ['story','conflict','lesson']) * 3
+           + matchSig(fullText, ['hook','solution']);
+    },
+    sequence: ['hook','setup','conflict','resolution','lesson','action','outro'],
+    sections: {
+      hook:       { label:'Hook',       emoji:'🪝', cls:'sec-hook',   pos:[0,0.15],   keys:['hook'],              weight:3 },
+      setup:      { label:'Setup',      emoji:'🎬', cls:'sec-intro',  pos:[0.05,0.35],keys:['story','intro'],     weight:3 },
+      conflict:   { label:'Conflict',   emoji:'⚡', cls:'sec-bridge', pos:[0.25,0.65],keys:['conflict','problem'],weight:3 },
+      resolution: { label:'Resolution', emoji:'✅', cls:'sec-body',   pos:[0.50,0.85],keys:['solution','lesson'], weight:3 },
+      lesson:     { label:'Lesson',     emoji:'💡', cls:'sec-body',   pos:[0.60,0.90],keys:['lesson','recap'],    weight:3 },
+      action:     { label:'CTA',        emoji:'📣', cls:'sec-cta',    pos:[0.75,1.0], keys:['action'],            weight:2 },
+      outro:      { label:'Outro',      emoji:'👏', cls:'sec-outro',  pos:[0.82,1.0], keys:['outro'],             weight:2 },
+    },
+    default(pos) { return pos < 0.12 ? 'hook' : pos < 0.35 ? 'setup' : pos < 0.6 ? 'conflict' : pos < 0.8 ? 'resolution' : 'outro'; },
   },
-  resolution: {
-    pos: { start: 0.40, end: 0.88 },
-    strong: [/\bla soluzione\b/i,/\bthe solution\b/i,/\bcome fare\b/i,/\bhow to\b/i,/\bil trucco\b/i,/\bthe trick\b/i,/\bbasta\b/i,/\bsimply\b/i,/\bfinalmente\b/i,/\bfinally\b/i,/\bricapitolando\b/i,/\bto summarize\b/i,/\bin sintesi\b/i,/\bto recap\b/i,/\bquello che ho imparato\b/i,/\bwhat i learned\b/i,/\bfunziona così\b/i,/\bhere's how\b/i,/\bda quel momento\b/i,/\bfrom that moment\b/i,/\bce la feci\b/i],
-    weak: [/\bquindi\b/i,/\bso\b/i,/\balla fine\b/i,/\bin the end\b/i,/\bdopo\b/i,/\bafter\b/i],
-  },
-  cta: {
-    pos: { start: 0.55, end: 1.0 },
-    strong: [/\biscriviti\b/i,/\biscrivetevi\b/i,/\bmetti mi piace\b/i,/\bcondividi\b/i,/\bcommenta\b/i,/\blascia un commento\b/i,/\bseguimi\b/i,/\bseguici\b/i,/\bnotifich\b/i,/\bcampanella\b/i,/\bsubscribe\b/i,/\bfollow\b/i,/\bshare\b/i,/\bleave a comment\b/i,/\bturn on\b/i,/\bbell icon\b/i,/\bhit the\b/i,/\blink in bio\b/i,/\blink in descrizione\b/i,/\btrovi il link\b/i,/\bclicca\b/i,/\bclick\b/i,/\blike\b/i],
-    weak: [/\bfammi sapere\b/i,/\blet me know\b/i,/\bscrivimi\b/i,/\btell me\b/i,/\bdimmi\b/i],
-  },
-  outro: {
-    pos: { start: 0.75, end: 1.0 },
-    strong: [/\bci vediamo\b/i,/\balla prossima\b/i,/\ba presto\b/i,/\bgrazie per aver guardato\b/i,/\bgrazie mille\b/i,/\bsee you (next|in the)\b/i,/\bthat'?s all\b/i,/\bthat'?s it\b/i,/\bthanks for watching\b/i,/\btake care\b/i,/\bbye\b/i,/\barrivederci\b/i,/\bciao ciao\b/i,/\baddio\b/i],
-    weak: [/\bin conclusione\b/i,/\bper concludere\b/i,/\bin conclusion\b/i,/\bper finire\b/i,/\bfinally\b/i],
+  edu: {
+    label: 'Educational',
+    description: 'Hook → Why → What → How → Recap → CTA',
+    emoji: '🎓',
+    fitScore(fullText) {
+      return matchSig(fullText, ['concept','interest','step','recap']) * 2
+           + matchSig(fullText, ['intro','solution']);
+    },
+    sequence: ['hook','why','what','how','recap','action','outro'],
+    sections: {
+      hook:   { label:'Hook',   emoji:'🪝', cls:'sec-hook',   pos:[0,0.15],   keys:['hook','attention'],   weight:3 },
+      why:    { label:'Why',    emoji:'🤔', cls:'sec-intro',  pos:[0.05,0.30],keys:['problem','interest'], weight:3 },
+      what:   { label:'What',   emoji:'📖', cls:'sec-body',   pos:[0.20,0.55],keys:['concept','intro'],    weight:3 },
+      how:    { label:'How',    emoji:'⚙️', cls:'sec-body',   pos:[0.40,0.80],keys:['step','solution'],    weight:3 },
+      recap:  { label:'Recap',  emoji:'📋', cls:'sec-bridge', pos:[0.70,0.92],keys:['recap'],              weight:3 },
+      action: { label:'CTA',    emoji:'📣', cls:'sec-cta',    pos:[0.78,1.0], keys:['action'],             weight:3 },
+      outro:  { label:'Outro',  emoji:'👏', cls:'sec-outro',  pos:[0.85,1.0], keys:['outro'],              weight:2 },
+    },
+    default(pos) { return pos < 0.12 ? 'hook' : pos < 0.28 ? 'why' : pos < 0.5 ? 'what' : pos < 0.78 ? 'how' : pos < 0.9 ? 'recap' : 'outro'; },
   },
 };
 
-function scoreChunk(text, pos) {
-  const scores = {};
-  for (const [secId, secDef] of Object.entries(SECTIONS)) {
-    if (secDef.isDefault) continue;
-    let s = 0;
-    for (const re of (secDef.strong || [])) if (re.test(text)) s += 3;
-    for (const re of (secDef.weak   || [])) if (re.test(text)) s += 1;
-    const inWindow = pos >= secDef.pos.start && pos <= secDef.pos.end;
-    if (s > 0) s += inWindow ? 2 : -2;
-    scores[secId] = Math.max(0, s);
-  }
-  return scores;
-}
-
-function applySequenceConstraints(labeled) {
-  let maxSeqSeen = -1;
-  return labeled.map(item => {
-    const idx = SEQUENCE.indexOf(item.type);
-    if (idx === -1) return item;
-    if (idx >= maxSeqSeen) { maxSeqSeen = idx; return item; }
-    return { ...item, type: 'body', confidence: 20 };
-  });
-}
+const COLOR_MAP = {
+  hook:'#818cf8', attention:'#818cf8',
+  intro:'#60a5fa', setup:'#60a5fa', why:'#60a5fa',
+  problem:'#fb923c', agitation:'#f97316',
+  body:'#4ade80', step:'#4ade80', concept:'#34d399', what:'#4ade80', how:'#34d399',
+  conflict:'#fbbf24', transition:'#fbbf24',
+  solution:'#4ade80', resolution:'#4ade80', lesson:'#6ee7b7',
+  desire:'#a78bfa', interest:'#60a5fa',
+  recap:'#94a3b8',
+  action:'#f87171', cta:'#f87171',
+  outro:'#c084fc', unknown:'#ccc',
+};
 
 function mergeConsecutive(labeled) {
   if (!labeled.length) return labeled;
@@ -866,77 +952,109 @@ function mergeConsecutive(labeled) {
     if (labeled[i].type === last.type) {
       last.text += ' ' + labeled[i].text;
       last.confidence = Math.max(last.confidence, labeled[i].confidence);
-    } else {
-      merged.push({ ...labeled[i] });
-    }
+    } else merged.push({ ...labeled[i] });
   }
   return merged;
 }
 
-function analyzeStructure(chunks) {
+function analyzeWithFramework(chunks, fwId) {
+  const fw = FRAMEWORKS[fwId];
   const total = chunks.length;
   if (total === 0) return [];
+
+  const sectionIds = Object.keys(fw.sections);
+
   const labeled = chunks.map((chunk, i) => {
-    const text = (chunk.text || '').trim(), pos = i / total;
-    const scores = scoreChunk(text, pos);
+    const text = (chunk.text || '').trim();
+    const pos  = i / total;
+
+    // Score each section type
+    const scores = {};
+    for (const [sid, sdef] of Object.entries(fw.sections)) {
+      const kScore  = matchSig(text, sdef.keys) * sdef.weight;
+      const inWin   = pos >= sdef.pos[0] && pos <= sdef.pos[1];
+      const posBonus = inWin ? 2 : -1;
+      scores[sid] = Math.max(0, kScore + (kScore > 0 ? posBonus : 0));
+    }
+
     const best = Object.entries(scores).reduce((a, b) => b[1] > a[1] ? b : a, ['', -1]);
     let type, confidence;
-    if (best[1] <= 0) { type = pos < HOOK_MAX_POS ? 'hook' : 'body'; confidence = 20; }
-    else { type = best[0]; confidence = Math.min(100, Math.round((best[1] / 8) * 100)); }
-    if (type === 'hook' && pos > HOOK_MAX_POS) { type = 'intro'; confidence = 20; }
-    if (pos >= 0.25 && pos <= 0.75 && confidence < 30 && type !== 'bridge' && type !== 'problem' && type !== 'resolution') { type = 'body'; confidence = 35; }
+
+    if (best[1] <= 0) {
+      type = fw.default(pos);
+      confidence = 20;
+    } else {
+      type = best[0];
+      confidence = Math.min(100, Math.round((best[1] / (fw.sections[best[0]].weight * 4)) * 100));
+    }
+
+    // Sequence enforcement: can't go backwards
     return { type, text, confidence, start: chunk.timestamp?.[0] };
   });
-  return mergeConsecutive(applySequenceConstraints(labeled));
+
+  // Enforce forward-only sequence
+  const seq = fw.sequence;
+  let maxIdx = -1;
+  const constrained = labeled.map(item => {
+    const idx = seq.indexOf(item.type);
+    if (idx === -1) return item;
+    if (idx >= maxIdx) { maxIdx = idx; return item; }
+    return { ...item, type: fw.default(0.5), confidence: 20 };
+  });
+
+  return mergeConsecutive(constrained);
 }
 
-function renderStructure(sections) {
+function detectBestFramework(chunks) {
+  const fullText = chunks.map(c => c.text || '').join(' ');
+  let best = 'pas', bestScore = -1;
+  for (const [id, fw] of Object.entries(FRAMEWORKS)) {
+    const s = fw.fitScore(fullText);
+    if (s > bestScore) { bestScore = s; best = id; }
+  }
+  return best;
+}
+
+function renderStructure(sections, fwId) {
+  const fw       = FRAMEWORKS[fwId];
   const blocksEl = document.getElementById('structureBlocks');
   const legendEl = document.getElementById('structureLegend');
   blocksEl.innerHTML = ''; legendEl.innerHTML = '';
 
-  // Legend
-  const usedTypes = SEQUENCE.filter(t => sections.some(s => s.type === t));
+  // Legend: only sections that appear
+  const usedTypes = fw.sequence.filter(t => sections.some(s => s.type === t));
   usedTypes.forEach(type => {
-    const m = SECTION_META[type] || SECTION_META.unknown;
+    const sdef = fw.sections[type];
+    if (!sdef) return;
     const li = document.createElement('span');
     li.className = 'legend-item';
-    li.textContent = `${m.emoji} ${m.label}`;
+    li.textContent = `${sdef.emoji} ${sdef.label}`;
     legendEl.appendChild(li);
   });
 
-  // Node graph container
   const graph = document.createElement('div');
   graph.className = 'node-graph';
 
   sections.forEach((sec, idx) => {
-    const m = SECTION_META[sec.type] || SECTION_META.unknown;
-    const confLabel = sec.confidence >= 60 ? 'alta' : sec.confidence >= 30 ? 'media' : 'bassa';
+    const sdef     = fw.sections[sec.type] || { label: sec.type, emoji:'📄', cls:'sec-unknown' };
+    const confLabel = sec.confidence >= 60 ? 'high' : sec.confidence >= 30 ? 'medium' : 'low';
+    const nodeColor = COLOR_MAP[sec.type] || '#ccc';
 
-    const colorMap = {
-      hook:'#818cf8', intro:'#60a5fa', body:'#4ade80',
-      bridge:'#fbbf24', resolution:'#4ade80', cta:'#f87171', outro:'#c084fc', unknown:'#ccc'
-    };
-    const nodeColor = colorMap[sec.type] || '#ccc';
-
-    // Card
     const item = document.createElement('div');
-    item.className = `node-item ${m.cls}`;
-
+    item.className = `node-item ${sdef.cls}`;
     item.innerHTML = `
       <div class="node-circle"></div>
       <div class="node-label"></div>
       <div class="node-card">
         <div class="section-label">
-          <span class="badge">${m.label}</span>
-          <span class="confidence">confidenza ${confLabel}</span>
+          <span class="badge">${sdef.emoji} ${sdef.label}</span>
+          <span class="confidence">confidence: ${confLabel}</span>
         </div>
         <div class="section-text">${escapeHtml(sec.text)}</div>
       </div>
     `;
     graph.appendChild(item);
 
-    // Connector between cards (not after last)
     if (idx < sections.length - 1) {
       const conn = document.createElement('div');
       conn.className = 'node-connector';
@@ -952,32 +1070,79 @@ function renderStructure(sections) {
   blocksEl.appendChild(graph);
 }
 
+function renderFrameworkTabs(autoFwId, activeFwId) {
+  const tabsEl = document.getElementById('frameworkTabs');
+  tabsEl.innerHTML = '';
+  for (const [id, fw] of Object.entries(FRAMEWORKS)) {
+    const tab = document.createElement('button');
+    tab.className = 'fw-tab' + (id === activeFwId ? ' active' : '');
+    tab.dataset.fw = id;
+    const autoBadge = id === autoFwId ? '<span class="fw-auto-badge">auto</span>' : '';
+    tab.innerHTML = `${fw.emoji} ${fw.label} ${autoBadge}`;
+    tab.title = fw.description;
+    tabsEl.appendChild(tab);
+  }
+}
+
 const analyzeBtn           = document.getElementById('analyzeBtn');
 const structurePanel       = document.getElementById('structure-panel');
 const copyStructureBtn     = document.getElementById('copyStructureBtn');
 const downloadStructureBtn = document.getElementById('downloadStructureBtn');
-let currentStructure = null;
+
+let allFrameworkResults = {};
+let activeFrameworkId   = 'pas';
+let autoFrameworkId     = 'pas';
 
 analyzeBtn.addEventListener('click', () => {
   if (!transcriptChunks) return;
-  currentStructure = analyzeStructure(transcriptChunks);
-  renderStructure(currentStructure);
+
+  // Detect best framework
+  autoFrameworkId  = detectBestFramework(transcriptChunks);
+  activeFrameworkId = autoFrameworkId;
+
+  // Pre-compute all frameworks
+  allFrameworkResults = {};
+  for (const fwId of Object.keys(FRAMEWORKS)) {
+    allFrameworkResults[fwId] = analyzeWithFramework(transcriptChunks, fwId);
+  }
+
+  renderFrameworkTabs(autoFrameworkId, activeFrameworkId);
+  renderStructure(allFrameworkResults[activeFrameworkId], activeFrameworkId);
+
   structurePanel.style.display = 'block';
   structurePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+document.getElementById('frameworkTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.fw-tab');
+  if (!tab) return;
+  activeFrameworkId = tab.dataset.fw;
+  renderFrameworkTabs(autoFrameworkId, activeFrameworkId);
+  renderStructure(allFrameworkResults[activeFrameworkId], activeFrameworkId);
+});
+
 copyStructureBtn.addEventListener('click', async () => {
-  if (!currentStructure) return;
-  const text = currentStructure.map(s => { const m = SECTION_META[s.type] || SECTION_META.unknown; return `[${m.label.toUpperCase()}]\n${s.text}`; }).join('\n\n');
+  const fw = FRAMEWORKS[activeFrameworkId];
+  const sections = allFrameworkResults[activeFrameworkId];
+  if (!sections) return;
+  const text = sections.map(s => {
+    const sdef = fw.sections[s.type] || { label: s.type };
+    return `[${sdef.label.toUpperCase()}]\n${s.text}`;
+  }).join('\n\n');
   await navigator.clipboard.writeText(text);
-  copyStructureBtn.textContent = 'Copiato!';
-  setTimeout(() => copyStructureBtn.textContent = 'Copia', 1500);
+  copyStructureBtn.textContent = 'Copied!';
+  setTimeout(() => copyStructureBtn.textContent = 'Copy', 1500);
 });
 
 downloadStructureBtn.addEventListener('click', () => {
-  if (!currentStructure) return;
-  const text = currentStructure.map(s => { const m = SECTION_META[s.type] || SECTION_META.unknown; return `[${m.label.toUpperCase()}]\n${s.text}`; }).join('\n\n');
-  downloadBlob(text, 'struttura.txt', 'text/plain');
+  const fw = FRAMEWORKS[activeFrameworkId];
+  const sections = allFrameworkResults[activeFrameworkId];
+  if (!sections) return;
+  const text = sections.map(s => {
+    const sdef = fw.sections[s.type] || { label: s.type };
+    return `[${sdef.label.toUpperCase()}]\n${s.text}`;
+  }).join('\n\n');
+  downloadBlob(text, `structure-${activeFrameworkId}.txt`, 'text/plain');
 });
 </script>
 
