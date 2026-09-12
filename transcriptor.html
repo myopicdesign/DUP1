@@ -684,6 +684,7 @@ transcribeBtn.addEventListener('click', async () => {
     }
 
     const output = await response.json();
+    console.log('GROQ RESPONSE:', JSON.stringify(output));
     setProgress(90);
 
     if (output.segments && output.segments.length) {
