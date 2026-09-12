@@ -254,7 +254,7 @@ select:focus{outline:none;border-color:var(--green)}
 #structure-panel{display:none}
 
 .structure-legend{
-  display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;
+  display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;
 }
 .legend-item{
   font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;
@@ -263,46 +263,133 @@ select:focus{outline:none;border-color:var(--green)}
   font-weight:600;
 }
 
-.section-block{
-  border-radius:10px;padding:1rem 1.1rem;
-  margin-bottom:.75rem;border-left:3px solid transparent;
+/* ── NODE GRAPH ── */
+.node-graph{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:0;
+  padding:0 .5rem;
 }
+
+.node-row{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:0;
+  position:relative;
+}
+
+/* The vertical connector spine */
+.node-spine{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+  padding:0;
+}
+
+.node-dot{
+  width:20px;height:20px;
+  border-radius:50%;
+  border:2.5px solid;
+  background:#fff;
+  flex-shrink:0;
+  position:relative;
+  z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;
+  margin-top:.9rem;
+  box-shadow:0 0 0 4px #fff;
+  transition:transform .15s;
+}
+.node-row:hover .node-dot{transform:scale(1.18)}
+
+/* Line below the dot (connects to next node) */
+.node-line{
+  flex:1;
+  width:2px;
+  background:linear-gradient(to bottom, currentColor 0%, transparent 100%);
+  opacity:.22;
+  min-height:1rem;
+}
+.node-row:last-child .node-line{display:none}
+
+/* Node card */
+.node-card{
+  border-radius:10px;
+  padding:.9rem 1.1rem;
+  margin:.5rem 0 .5rem .75rem;
+  border:1.5px solid transparent;
+  cursor:default;
+  transition:box-shadow .15s, transform .12s;
+  position:relative;
+}
+.node-card:hover{
+  box-shadow:0 4px 18px rgba(0,0,0,.07);
+  transform:translateX(2px);
+}
+
+/* Horizontal connector from spine to card */
+.node-card::before{
+  content:'';
+  position:absolute;
+  left:-12px;top:50%;
+  width:12px;height:2px;
+  background:var(--connector-color,var(--border));
+  opacity:.4;
+  transform:translateY(-50%);
+}
+
 .section-label{
-  font-family:var(--mono);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;
+  font-family:var(--mono);font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  margin-bottom:.45rem;display:flex;align-items:center;gap:.5rem;
 }
 .section-label .badge{
   font-size:.6rem;padding:.15rem .5rem;border-radius:20px;font-weight:700;
 }
-.section-text{font-size:.875rem;line-height:1.65;color:#333}
-.confidence{font-size:.65rem;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
+.section-text{font-size:.875rem;line-height:1.65;color:#444}
+.confidence{font-size:.62rem;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
 
-/* Section colors — adapted to DUPY light theme */
-.sec-hook   {background:#f5f3ff;border-color:#818cf8}
+/* Section colors */
+.sec-hook   .node-card{background:#f5f3ff;border-color:#818cf8;--connector-color:#818cf8}
+.sec-hook   .node-dot{border-color:#818cf8;color:#818cf8}
+.sec-hook   .node-line{color:#818cf8}
 .sec-hook   .section-label{color:#4f46e5}
 .sec-hook   .badge{background:#e0e7ff;color:#4f46e5}
 
-.sec-intro  {background:#eff6ff;border-color:#60a5fa}
+.sec-intro  .node-card{background:#eff6ff;border-color:#60a5fa;--connector-color:#60a5fa}
+.sec-intro  .node-dot{border-color:#60a5fa;color:#60a5fa}
+.sec-intro  .node-line{color:#60a5fa}
 .sec-intro  .section-label{color:#2563eb}
 .sec-intro  .badge{background:#dbeafe;color:#2563eb}
 
-.sec-body   {background:#f0fdf4;border-color:#4ade80}
+.sec-body   .node-card{background:#f0fdf4;border-color:#4ade80;--connector-color:#4ade80}
+.sec-body   .node-dot{border-color:#4ade80;color:#4ade80}
+.sec-body   .node-line{color:#4ade80}
 .sec-body   .section-label{color:#16a34a}
 .sec-body   .badge{background:#dcfce7;color:#16a34a}
 
-.sec-bridge {background:#fffbeb;border-color:#fbbf24}
+.sec-bridge .node-card{background:#fffbeb;border-color:#fbbf24;--connector-color:#fbbf24}
+.sec-bridge .node-dot{border-color:#fbbf24;color:#fbbf24}
+.sec-bridge .node-line{color:#fbbf24}
 .sec-bridge .section-label{color:#d97706}
 .sec-bridge .badge{background:#fef3c7;color:#d97706}
 
-.sec-cta    {background:#fff0f0;border-color:#f87171}
+.sec-cta    .node-card{background:#fff0f0;border-color:#f87171;--connector-color:#f87171}
+.sec-cta    .node-dot{border-color:#f87171;color:#f87171}
+.sec-cta    .node-line{color:#f87171}
 .sec-cta    .section-label{color:#dc2626}
 .sec-cta    .badge{background:#fee2e2;color:#dc2626}
 
-.sec-outro  {background:#faf5ff;border-color:#c084fc}
+.sec-outro  .node-card{background:#faf5ff;border-color:#c084fc;--connector-color:#c084fc}
+.sec-outro  .node-dot{border-color:#c084fc;color:#c084fc}
+.sec-outro  .node-line{color:#c084fc}
 .sec-outro  .section-label{color:#9333ea}
 .sec-outro  .badge{background:#f3e8ff;color:#9333ea}
 
-.sec-unknown{background:var(--off);border-color:var(--border)}
+.sec-unknown .node-card{background:var(--off);border-color:var(--border)}
+.sec-unknown .node-dot{border-color:var(--border);color:var(--muted)}
+.sec-unknown .node-line{color:var(--muted)}
 .sec-unknown .section-label{color:var(--muted)}
 .sec-unknown .badge{background:var(--border);color:var(--muted)}
 
@@ -792,6 +879,8 @@ function renderStructure(sections) {
   const blocksEl = document.getElementById('structureBlocks');
   const legendEl = document.getElementById('structureLegend');
   blocksEl.innerHTML = ''; legendEl.innerHTML = '';
+
+  // Legend
   const usedTypes = SEQUENCE.filter(t => sections.some(s => s.type === t));
   usedTypes.forEach(type => {
     const m = SECTION_META[type] || SECTION_META.unknown;
@@ -800,19 +889,44 @@ function renderStructure(sections) {
     li.textContent = `${m.emoji} ${m.label}`;
     legendEl.appendChild(li);
   });
-  sections.forEach(sec => {
+
+  // Node graph
+  const graph = document.createElement('div');
+  graph.className = 'node-graph';
+
+  sections.forEach((sec, idx) => {
     const m = SECTION_META[sec.type] || SECTION_META.unknown;
-    const div = document.createElement('div');
-    div.className = `section-block ${m.cls}`;
     const confLabel = sec.confidence >= 60 ? 'alta' : sec.confidence >= 30 ? 'media' : 'bassa';
-    div.innerHTML = `
+    const isLast = idx === sections.length - 1;
+
+    const row = document.createElement('div');
+    row.className = `node-row ${m.cls}`;
+
+    // Spine column: dot + line
+    const spine = document.createElement('div');
+    spine.className = 'node-spine';
+    spine.innerHTML = `
+      <div class="node-dot">${m.emoji}</div>
+      ${!isLast ? '<div class="node-line"></div>' : ''}
+    `;
+
+    // Card column
+    const card = document.createElement('div');
+    card.className = 'node-card';
+    card.innerHTML = `
       <div class="section-label">
-        <span class="badge">${m.emoji} ${m.label}</span>
+        <span class="badge">${m.label}</span>
         <span class="confidence">confidenza ${confLabel}</span>
       </div>
-      <div class="section-text">${escapeHtml(sec.text)}</div>`;
-    blocksEl.appendChild(div);
+      <div class="section-text">${escapeHtml(sec.text)}</div>
+    `;
+
+    row.appendChild(spine);
+    row.appendChild(card);
+    graph.appendChild(row);
   });
+
+  blocksEl.appendChild(graph);
 }
 
 const analyzeBtn           = document.getElementById('analyzeBtn');
