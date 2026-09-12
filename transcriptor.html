@@ -453,7 +453,7 @@ select:focus{outline:none;border-color:var(--green)}
         </div>
         <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
         <div class="error-msg" id="errorBox"></div>
-        <p class="footer-note" style="text-align:left;margin-top:1rem">Whisper Medium (~780MB) — scaricato una volta sola, poi in cache.</p>
+        <p class="footer-note" style="text-align:left;margin-top:1rem">Powered by Whisper Large v3 via Groq — veloce e preciso.</p>
       </div>
     </div>
 
@@ -506,9 +506,9 @@ select:focus{outline:none;border-color:var(--green)}
 <div data-include="footer.html"></div>
 
 <script type="module">
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
-env.allowLocalModels = false;
+
+const WORKER_URL = 'https://whisper-proxy.dupy.workers.dev';
 
 const dropEl        = document.getElementById('drop');
 const fileInput     = document.getElementById('fileInput');
@@ -623,44 +623,50 @@ async function extractAudioMono16k(file) {
   return rendered.getChannelData(0);
 }
 
-// Model loading
-async function getTranscriber(modelId) {
-  if (transcriber && currentModelId === modelId) return transcriber;
-  setStatus('Caricamento modello ' + modelId + '...', true);
-  transcriber = await pipeline('automatic-speech-recognition', modelId, {
-    progress_callback: (data) => {
-      if (data.status === 'progress' && data.progress != null) {
-        setProgress(data.progress);
-        setStatus('Download modello: ' + Math.round(data.progress) + '%', true);
-      } else if (data.status === 'ready') {
-        setProgress(null);
-      }
-    }
-  });
-  currentModelId = modelId;
-  setProgress(null);
-  return transcriber;
-}
-
-// Transcription
+// Transcription via Groq Worker
 transcribeBtn.addEventListener('click', async () => {
   if (!currentFile) return;
   clearError();
   transcribeBtn.disabled = true;
   try {
-    setStatus('Estrazione audio dal video...', true);
-    const audioData = await extractAudioMono16k(currentFile);
-    const modelId = modelSelect.value;
-    const model = await getTranscriber(modelId);
-    setStatus('Trascrizione in corso... (può richiedere qualche minuto)', true);
+    setStatus('Invio audio a Groq Whisper...', true);
+    setProgress(10);
+
     const lang = langSelect.value;
-    const options = { chunk_length_s: 30, stride_length_s: 5, return_timestamps: true };
-    if (lang !== 'auto') { options.language = lang; options.task = 'transcribe'; }
-    const output = await model(audioData, options);
-    transcriptChunks = (output.chunks && output.chunks.length)
-      ? output.chunks
-      : [{ timestamp: [0, null], text: output.text }];
-    renderResults(transcriptChunks, output.text);
+
+    // Manda il file video direttamente a Groq via Worker
+    const formData = new FormData();
+    formData.append('file', currentFile, currentFile.name);
+    if (lang !== 'auto') formData.append('language', lang);
+
+    setProgress(30);
+    setStatus('Trascrizione in corso...', true);
+
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Errore dal server');
+    }
+
+    const output = await response.json();
+    setProgress(90);
+
+    // Groq restituisce verbose_json con segments
+    if (output.segments && output.segments.length) {
+      transcriptChunks = output.segments.map(s => ({
+        text: s.text,
+        timestamp: [s.start, s.end],
+      }));
+    } else {
+      transcriptChunks = [{ timestamp: [0, null], text: output.text }];
+    }
+
+    const fullText = output.text || transcriptChunks.map(c => c.text).join(' ');
+    renderResults(transcriptChunks, fullText);
     setStatus('', false); setProgress(null);
     const emptyState = document.getElementById('empty-state');
     if(emptyState) emptyState.style.display = 'none';
