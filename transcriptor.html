@@ -792,23 +792,50 @@ downloadSrt.addEventListener('click', () => {
 });
 
 // ─── STRUCTURE ANALYSIS ENGINE ────────────────────────────────────────────────
-// Struttura fissa e universale: Hook (apertura) → Body (corpo) → Conclusion
-// (chiusura). Nessuna euristica testuale, nessun modello: la suddivisione è
-// puramente posizionale sulla sequenza dei chunk, quindi funziona identica
-// in QUALUNQUE lingua ed è istantanea (nessun caricamento, nessun calcolo
-// pesante).
+// Struttura fissa: Hook (0:00-0:05) → Body/Development (centrale) →
+// Conclusion (ultimi 5 secondi). In più, indipendentemente dalla posizione,
+// se un chunk contiene parole tipiche da call-to-action (segui/follow,
+// iscriviti/subscribe, like, ecc.) in una delle lingue principali, viene
+// etichettato CTA. Nessun modello, nessuna chiamata esterna: tutto istantaneo.
 
 const SECTIONS = {
-  hook:       { label: 'Hook',       emoji: '🪝', cls: 'sec-hook' },
-  body:       { label: 'Body',       emoji: '📖', cls: 'sec-body' },
-  conclusion: { label: 'Conclusion', emoji: '🏁', cls: 'sec-outro' },
+  hook:       { label: 'Hook',                emoji: '🪝', cls: 'sec-hook'  },
+  body:       { label: 'Body / Development',  emoji: '📖', cls: 'sec-body'  },
+  conclusion: { label: 'Conclusion',          emoji: '🏁', cls: 'sec-outro' },
+  cta:        { label: 'CTA',                 emoji: '📣', cls: 'sec-cta'   },
 };
 
-const COLOR_MAP = { hook: '#818cf8', body: '#4ade80', conclusion: '#c084fc' };
+const COLOR_MAP = { hook: '#818cf8', body: '#4ade80', conclusion: '#c084fc', cta: '#f87171' };
 
-// Quota di chunk assegnata a hook e conclusion; il resto è body.
-const HOOK_RATIO       = 0.15;
-const CONCLUSION_RATIO = 0.15;
+const HOOK_SECONDS       = 5;
+const CONCLUSION_SECONDS = 5;
+
+// Pattern CTA nelle lingue principali selezionabili nel tool (IT, EN, ES, FR, DE, PT).
+const CTA_PATTERNS = [
+  // Italiano
+  /\bsegu(imi|ime|i|ici|ilo|ila)\b/i, /\biscriviti\b/i, /\bmetti(?:\s+un)?\s+like\b/i, /\blascia\s+un\s+like\b/i,
+  /\bcommenta\b/i, /\bcondividi\b/i, /\bclicca(?:\s+il\s+link)?\b/i, /\blink in bio\b/i, /\blink in descrizione\b/i,
+  /\bscarica(?:lo)?\b/i, /\bcompra(?:lo)?\b/i,
+  // Inglese
+  /\bfollow me\b/i, /\bfollow\b/i, /\bsubscribe\b/i, /\blike this\b/i, /\bcomment below\b/i, /\bshare this\b/i,
+  /\bclick the link\b/i, /\blink in bio\b/i, /\bdownload\b/i, /\bbuy now\b/i,
+  // Spagnolo
+  /\bs[ií]gueme\b/i, /\bsigue\b/i, /\bsuscr[ií]bete\b/i, /\bdale like\b/i, /\bcomenta\b/i, /\bcomparte\b/i,
+  /\bhaz clic\b/i, /\benlace en la bio\b/i, /\bdescarga\b/i, /\bcompra\b/i,
+  // Francese
+  /\bsuis-moi\b/i, /\babonne-toi\b/i, /\babonnez-vous\b/i, /\bmets un like\b/i, /\bcommente\b/i, /\bpartage\b/i,
+  /\bclique sur le lien\b/i, /\blien en bio\b/i, /\bt[ée]l[ée]charge\b/i, /\bach[èe]te\b/i,
+  // Tedesco
+  /\bfolge mir\b/i, /\bfolgen\b/i, /\babonnier(e|t)?\b/i, /\bgib ein like\b/i, /\bkommentiere\b/i, /\bteile\b/i,
+  /\bklick auf den link\b/i, /\blink in der bio\b/i, /\blade herunter\b/i, /\bkaufe\b/i,
+  // Portoghese
+  /\bsegue-me\b/i, /\bsiga\b/i, /\binscreva-se\b/i, /\bcurte\b/i, /\bdeixa um like\b/i, /\bcompartilha\b/i,
+  /\bclique no link\b/i, /\blink na bio\b/i, /\bbaixe\b/i, /\bcompre\b/i,
+];
+
+function isCTA(text) {
+  return CTA_PATTERNS.some(re => re.test(text));
+}
 
 function mergeConsecutive(labeled) {
   if (!labeled.length) return labeled;
@@ -822,17 +849,38 @@ function mergeConsecutive(labeled) {
   return merged;
 }
 
+function getVideoDuration(chunks) {
+  if (preview && isFinite(preview.duration) && preview.duration > 0) return preview.duration;
+  let max = 0;
+  for (const c of chunks) {
+    const end = c.timestamp?.[1], start = c.timestamp?.[0];
+    if (typeof end === 'number' && end > max) max = end;
+    else if (typeof start === 'number' && start > max) max = start;
+  }
+  return max;
+}
+
 function splitHookBodyConclusion(chunks) {
   const usable = chunks.filter(c => (c.text || '').trim());
-  const total = usable.length;
-  if (total === 0) return [];
+  if (!usable.length) return [];
 
-  const hookEnd = Math.max(1, Math.round(total * HOOK_RATIO));
-  const conclusionStart = Math.max(hookEnd + 1, total - Math.round(total * CONCLUSION_RATIO));
+  const duration = getVideoDuration(usable);
 
-  const labeled = usable.map((chunk, i) => {
-    const type = i < hookEnd ? 'hook' : i < conclusionStart ? 'body' : 'conclusion';
-    return { type, text: chunk.text.trim(), start: chunk.timestamp?.[0] };
+  const labeled = usable.map((chunk) => {
+    const start = chunk.timestamp?.[0] ?? 0;
+    const text  = chunk.text.trim();
+
+    let type;
+    if (isCTA(text)) {
+      type = 'cta'; // la CTA vince sempre sulla posizione
+    } else if (start < HOOK_SECONDS) {
+      type = 'hook';
+    } else if (duration > 0 && start >= duration - CONCLUSION_SECONDS) {
+      type = 'conclusion';
+    } else {
+      type = 'body';
+    }
+    return { type, text, start };
   });
 
   return mergeConsecutive(labeled);
@@ -892,7 +940,7 @@ analyzeBtn.addEventListener('click', () => {
 
   activeSections = splitHookBodyConclusion(transcriptChunks);
 
-  fwDetectedName.textContent = '🪝 Hook → 📖 Body → 🏁 Conclusion';
+  fwDetectedName.textContent = '🪝 Hook → 📖 Body/Development → 🏁 Conclusion (+ 📣 CTA se rilevata)';
   fwDetectedLabel.style.display = 'flex';
 
   renderStructure(activeSections);
