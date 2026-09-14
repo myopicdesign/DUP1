@@ -223,7 +223,7 @@ select:focus{outline:none;border-color:var(--green)}
 .segments{
   max-height:500px;overflow-y:auto;
   display:flex;flex-direction:column;gap:1px;
-  border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
+  border:1.5px solid var(--border);border-radius:10px;
 }
 .segment{
   display:flex;gap:.9rem;
@@ -781,113 +781,116 @@ downloadSrt.addEventListener('click', () => {
 });
 
 // ─── STRUCTURE ANALYSIS ENGINE ────────────────────────────────────────────────
-// Fully language-agnostic: position + punctuation + sentence-shape heuristics
 
-const VIRAL_FRAMEWORK = {
-  sequence: ['hook','open_loop','progression','escalation','payoff','conclusion','cta'],
-  sections: {
-    hook:        { label:'Hook',        emoji:'⚡', cls:'sec-hook',   pos:[0,    0.12] },
-    open_loop:   { label:'Open Loop',   emoji:'🔄', cls:'sec-intro',  pos:[0.05, 0.25] },
-    progression: { label:'Progression', emoji:'📈', cls:'sec-body',   pos:[0.15, 0.68] },
-    escalation:  { label:'Escalation',  emoji:'🔥', cls:'sec-bridge', pos:[0.38, 0.78] },
-    payoff:      { label:'Payoff',      emoji:'🎯', cls:'sec-body',   pos:[0.62, 0.90] },
-    conclusion:  { label:'Conclusion',  emoji:'✅', cls:'sec-cta',    pos:[0.75, 0.96] },
-    cta:         { label:'CTA',         emoji:'📣', cls:'sec-outro',  pos:[0.86, 1.0]  },
+const SIG = {
+  hook:        [/immagina/i,/have you ever/i,/did you know/i,/what if/i,/imagine/i,/guess what/i,/hai mai/i,/sapevi che/i,/lo sapevi/i,/aspetta/i,/stop scrolling/i,/non avrei dovuto/i,/guarda cosa/i,/ho scoperto/i,/would you believe/i],
+  problem:     [/il problema/i,/the problem/i,/purtroppo/i,/unfortunately/i,/spesso capita/i,/molti di voi/i,/most people/i,/la sfida/i,/the challenge/i,/non funziona/i,/if you('ve)? ever/i,/se hai mai/i,/frustraz/i,/struggle/i],
+  agitation:   [/costa/i,/paghi/i,/perdi/i,/you lose/i,/you waste/i,/risk/i,/rischio/i,/dangerous/i,/pericoloso/i,/worse/i,/peggior/i],
+  solution:    [/la soluzione/i,/the solution/i,/come fare/i,/how to/i,/il trucco/i,/the trick/i,/finalmente/i,/finally/i,/the answer/i,/la risposta/i,/the secret/i,/il segreto/i],
+  attention:   [/ascolta/i,/listen/i,/guarda/i,/look/i,/importante/i,/important/i,/attenzione/i,/attention/i],
+  interest:    [/perché funziona/i,/why it works/i,/studi/i,/ricerca/i,/research/i,/dati/i,/data/i,/statistich/i,/statistics/i],
+  desire:      [/immagina/i,/imagine/i,/potresti/i,/you could/i,/finalmente/i,/finally/i,/sogno/i,/dream/i,/libertà/i,/freedom/i],
+  action:      [/iscriviti/i,/subscribe/i,/clicca/i,/click/i,/scarica/i,/download/i,/prova/i,/try/i,/compra/i,/buy/i,/link in bio/i,/commenta/i,/comment/i,/condividi/i,/share/i,/seguimi/i,/follow/i],
+  intro:       [/mi chiamo/i,/my name is/i,/in questo video/i,/in this video/i,/parleremo di/i,/today (i|we)/i,/oggi (ti|vi)/i,/vedremo come/i,/we('ll| will) (see|look|cover)/i],
+  step:        [/step [0-9]/i,/passo [0-9]/i,/primo/i,/first/i,/secondo/i,/second/i,/terzo/i,/third/i,/infine/i,/lastly/i,/[0-9]\.\s/],
+  story:       [/era una volta/i,/once upon/i,/ricordo quando/i,/i remember when/i,/un giorno/i,/one day/i,/da piccolo/i,/growing up/i,/la mia storia/i,/my story/i],
+  conflict:    [/ma poi/i,/but then/i,/tutto cambiò/i,/everything changed/i,/svolta/i,/turning point/i,/crisi/i,/crisis/i],
+  lesson:      [/ho imparato/i,/i learned/i,/la lezione/i,/the lesson/i,/capii che/i,/i realized/i,/mi rese conto/i],
+  concept:     [/cos'?è/i,/what is/i,/significa/i,/it means/i,/per esempio/i,/for example/i,/think of it as/i],
+  recap:       [/ricapitolando/i,/to recap/i,/in sintesi/i,/in summary/i,/in conclusione/i,/in conclusion/i,/to summarize/i],
+  outro:       [/ci vediamo/i,/see you/i,/alla prossima/i,/next time/i,/grazie/i,/thanks/i,/thank you/i,/arrivederci/i,/ciao ciao/i,/bye/i,/that's all/i],
+  transition:  [/detto questo/i,/with that said/i,/passando a/i,/moving on/i,/now let's/i,/ora vediamo/i,/però/i,/however/i],
+};
+
+function matchSig(text, keys) {
+  let score = 0;
+  for (const k of keys) for (const re of (SIG[k] || [])) if (re.test(text)) score++;
+  return score;
+}
+
+const FRAMEWORKS = {
+  pas: {
+    label:'PAS', emoji:'🎯', description:'Problem → Agitate → Solution',
+    fitScore(t) { return matchSig(t,['problem','agitation','solution'])*2 + matchSig(t,['hook','action']); },
+    sequence:['hook','problem','agitation','solution','action','outro'],
+    sections:{
+      hook:      {label:'Hook',     emoji:'🪝',cls:'sec-hook',   pos:[0,0.18],  keys:['hook'],               weight:3},
+      problem:   {label:'Problem',  emoji:'❓',cls:'sec-bridge', pos:[0.05,0.45],keys:['problem'],            weight:3},
+      agitation: {label:'Agitate',  emoji:'🔥',cls:'sec-bridge', pos:[0.20,0.65],keys:['agitation','problem'],weight:2},
+      solution:  {label:'Solution', emoji:'✅',cls:'sec-body',   pos:[0.40,0.90],keys:['solution'],           weight:3},
+      action:    {label:'CTA',      emoji:'📣',cls:'sec-cta',    pos:[0.60,1.0], keys:['action'],             weight:3},
+      outro:     {label:'Outro',    emoji:'👏',cls:'sec-outro',  pos:[0.80,1.0], keys:['outro'],              weight:2},
+    },
+    default(pos){return pos<0.15?'hook':pos<0.5?'problem':'solution';},
   },
-  default(pos) {
-    return pos < 0.10 ? 'hook'
-         : pos < 0.22 ? 'open_loop'
-         : pos < 0.55 ? 'progression'
-         : pos < 0.70 ? 'escalation'
-         : pos < 0.84 ? 'payoff'
-         : pos < 0.93 ? 'conclusion'
-         : 'cta';
+  aida: {
+    label:'AIDA', emoji:'📈', description:'Attention → Interest → Desire → Action',
+    fitScore(t) { return matchSig(t,['attention','interest','desire','action'])*2 + matchSig(t,['hook']); },
+    sequence:['attention','interest','desire','action','outro'],
+    sections:{
+      attention:{label:'Attention',emoji:'👀',cls:'sec-hook',  pos:[0,0.25],  keys:['attention','hook'],  weight:3},
+      interest: {label:'Interest', emoji:'🧠',cls:'sec-intro', pos:[0.15,0.50],keys:['interest','concept'],weight:3},
+      desire:   {label:'Desire',   emoji:'💜',cls:'sec-body',  pos:[0.35,0.75],keys:['desire','solution'], weight:3},
+      action:   {label:'Action',   emoji:'📣',cls:'sec-cta',   pos:[0.60,1.0], keys:['action'],            weight:3},
+      outro:    {label:'Outro',    emoji:'👏',cls:'sec-outro', pos:[0.80,1.0], keys:['outro'],             weight:2},
+    },
+    default(pos){return pos<0.25?'attention':pos<0.5?'interest':pos<0.75?'desire':'action';},
+  },
+  tutorial: {
+    label:'Tutorial', emoji:'📚', description:'Hook → Intro → Steps → Recap → CTA',
+    fitScore(t) { return matchSig(t,['step','intro','recap'])*3 + matchSig(t,['concept','solution']); },
+    sequence:['hook','intro','step','concept','recap','action','outro'],
+    sections:{
+      hook:   {label:'Hook',    emoji:'🪝',cls:'sec-hook',  pos:[0,0.15],   keys:['hook'],              weight:3},
+      intro:  {label:'Intro',   emoji:'👋',cls:'sec-intro', pos:[0.05,0.30],keys:['intro'],             weight:3},
+      concept:{label:'Concept', emoji:'💡',cls:'sec-body',  pos:[0.15,0.60],keys:['concept','interest'],weight:2},
+      step:   {label:'Step',    emoji:'🔢',cls:'sec-body',  pos:[0.20,0.85],keys:['step'],              weight:3},
+      recap:  {label:'Recap',   emoji:'📋',cls:'sec-bridge',pos:[0.65,0.90],keys:['recap'],             weight:3},
+      action: {label:'CTA',     emoji:'📣',cls:'sec-cta',   pos:[0.75,1.0], keys:['action'],            weight:3},
+      outro:  {label:'Outro',   emoji:'👏',cls:'sec-outro', pos:[0.85,1.0], keys:['outro'],             weight:2},
+    },
+    default(pos){return pos<0.12?'hook':pos<0.25?'intro':pos<0.75?'step':pos<0.88?'recap':'outro';},
+  },
+  story: {
+    label:'Storytelling', emoji:'📖', description:'Hook → Setup → Conflict → Resolution → Lesson',
+    fitScore(t) { return matchSig(t,['story','conflict','lesson'])*3 + matchSig(t,['hook','solution']); },
+    sequence:['hook','setup','conflict','resolution','lesson','action','outro'],
+    sections:{
+      hook:      {label:'Hook',      emoji:'🪝',cls:'sec-hook',  pos:[0,0.15],   keys:['hook'],             weight:3},
+      setup:     {label:'Setup',     emoji:'🎬',cls:'sec-intro', pos:[0.05,0.35],keys:['story','intro'],    weight:3},
+      conflict:  {label:'Conflict',  emoji:'⚡',cls:'sec-bridge',pos:[0.25,0.65],keys:['conflict','problem'],weight:3},
+      resolution:{label:'Resolution',emoji:'✅',cls:'sec-body',  pos:[0.50,0.85],keys:['solution','lesson'],weight:3},
+      lesson:    {label:'Lesson',    emoji:'💡',cls:'sec-body',  pos:[0.60,0.90],keys:['lesson','recap'],   weight:3},
+      action:    {label:'CTA',       emoji:'📣',cls:'sec-cta',   pos:[0.75,1.0], keys:['action'],           weight:2},
+      outro:     {label:'Outro',     emoji:'👏',cls:'sec-outro', pos:[0.82,1.0], keys:['outro'],            weight:2},
+    },
+    default(pos){return pos<0.12?'hook':pos<0.35?'setup':pos<0.6?'conflict':pos<0.8?'resolution':'outro';},
+  },
+  edu: {
+    label:'Educational', emoji:'🎓', description:'Hook → Why → What → How → Recap → CTA',
+    fitScore(t) { return matchSig(t,['concept','interest','step','recap'])*2 + matchSig(t,['intro','solution']); },
+    sequence:['hook','why','what','how','recap','action','outro'],
+    sections:{
+      hook:  {label:'Hook', emoji:'🪝',cls:'sec-hook',  pos:[0,0.15],   keys:['hook','attention'],  weight:3},
+      why:   {label:'Why',  emoji:'🤔',cls:'sec-intro', pos:[0.05,0.30],keys:['problem','interest'],weight:3},
+      what:  {label:'What', emoji:'📖',cls:'sec-body',  pos:[0.20,0.55],keys:['concept','intro'],   weight:3},
+      how:   {label:'How',  emoji:'⚙️',cls:'sec-body',  pos:[0.40,0.80],keys:['step','solution'],   weight:3},
+      recap: {label:'Recap',emoji:'📋',cls:'sec-bridge',pos:[0.70,0.92],keys:['recap'],             weight:3},
+      action:{label:'CTA',  emoji:'📣',cls:'sec-cta',   pos:[0.78,1.0], keys:['action'],            weight:3},
+      outro: {label:'Outro',emoji:'👏',cls:'sec-outro', pos:[0.85,1.0], keys:['outro'],             weight:2},
+    },
+    default(pos){return pos<0.12?'hook':pos<0.28?'why':pos<0.5?'what':pos<0.78?'how':pos<0.9?'recap':'outro';},
   },
 };
 
-// ── Universal signal extractors (no language assumed) ────────────────────────
-
-function wordCount(t) { return t.trim().split(/\s+/).filter(Boolean).length; }
-function hasQuestion(t)    { return /\?/.test(t); }
-function hasExclamation(t) { return /!/.test(t); }
-function hasSuspension(t)  { return /\.{2,}|…/.test(t); }
-
-// Adversative pivot: short token (2–6 chars) right at sentence start or after punctuation.
-// Covers ma, pero, mais, aber, maar, men, dock, doch, ni, ya, mas, po, ama, eppure, però,
-// but, yet, sauf, ni, seulement, apenas, somente, trotzdem, jedoch, allerdings, par contre,
-// cependant, pourtant, voire, solo, sólo, juste, nur, tan, tant, and many more.
-function hasAdversative(t) {
-  return /(?:^|[.!?;,]\s+)\b\w{2,6}\b(?=\s)/i.test(t) &&
-    /(?:^|\s)(ma|pero|mais|aber|maar|men|dock|doch|ya|ni|mas|po|ama|eppure|però|but|yet|sauf|or|seulement|apenas|somente|trotzdem|jedoch|allerdings|immerhin|cependant|pourtant|voire|solo|sólo|juste|nur|tant|tan)\b/i.test(t);
-}
-
-// Sequence / list markers: digits followed by ) or . or space, or a handful of universal ordinals
-function hasSequenceMarker(t) {
-  return /\b[1-9][.)\s]|\b(first|primo|premier|primero|erstens|eerste|primeiro|まず|сначала)\b/i.test(t);
-}
-
-// Social/CTA cues: URLs, handles, hashtags — truly language-independent
-function hasSocialCue(t) {
-  return /@\w|#\w|https?:|www\.|link\b|bio\b|desc\b|\.com\b|\.it\b|\.co\b/i.test(t);
-}
-
-// Score a single chunk against all 7 sections
-function scoreChunk(text, pos, avgWordsBefore) {
-  const wc           = wordCount(text);
-  const q            = hasQuestion(text);
-  const ex           = hasExclamation(text);
-  const su           = hasSuspension(text);
-  const adv          = hasAdversative(text);
-  const seq          = hasSequenceMarker(text);
-  const soc          = hasSocialCue(text);
-  const isShort      = wc < 12;
-  const isLong       = wc > 22;
-  const dropAfterLong = avgWordsBefore > 20 && isShort;
-
-  const scores = {};
-  for (const [sid, sdef] of Object.entries(VIRAL_FRAMEWORK.sections)) {
-    // Position is the primary signal: +4 inside window, -1 outside
-    let s = (pos >= sdef.pos[0] && pos <= sdef.pos[1]) ? 4 : -1;
-
-    switch (sid) {
-      case 'hook':
-        if (isShort)           s += 3;
-        if (q || ex)           s += 3;
-        if (su)                s += 1;
-        break;
-      case 'open_loop':
-        if (q)                 s += 3;
-        if (su)                s += 3;
-        if (isShort && !ex)    s += 1;
-        break;
-      case 'progression':
-        if (isLong)            s += 3;
-        if (seq)               s += 4;
-        if (!q && !ex && !adv) s += 2; // neutral informative tone
-        break;
-      case 'escalation':
-        if (adv)               s += 5;
-        if (ex && !isLong)     s += 2;
-        if (isShort)           s += 1;
-        break;
-      case 'payoff':
-        if (ex)                s += 3;
-        if (dropAfterLong)     s += 4;
-        if (isShort && !q)     s += 2;
-        break;
-      case 'conclusion':
-        if (!q && !ex && !soc) s += 2;
-        if (!isLong)           s += 1;
-        break;
-      case 'cta':
-        if (soc)               s += 6;
-        if (isShort)           s += 3;
-        if (ex)                s += 1;
-        break;
-    }
-    scores[sid] = Math.max(0, s);
+function detectBestFramework(chunks) {
+  const fullText = chunks.map(c => c.text || '').join(' ');
+  let best = 'pas', bestScore = -1;
+  for (const [id, fw] of Object.entries(FRAMEWORKS)) {
+    const s = fw.fitScore(fullText);
+    if (s > bestScore) { bestScore = s; best = id; }
   }
-  return scores;
+  return best;
 }
 
 function mergeConsecutive(labeled) {
@@ -903,49 +906,47 @@ function mergeConsecutive(labeled) {
   return merged;
 }
 
-function analyzeTranscript(chunks) {
+function analyzeWithFramework(chunks, fwId) {
+  const fw = FRAMEWORKS[fwId];
   const total = chunks.length;
   if (total === 0) return [];
 
-  // Running average word count (window of 4) for "drop after long" detection
-  const wcs = chunks.map(c => wordCount((c.text || '').trim()));
-  const runAvg = wcs.map((_, i) => {
-    const win = wcs.slice(Math.max(0, i - 4), i);
-    return win.length ? win.reduce((a, b) => a + b, 0) / win.length : wcs[0];
-  });
-
   const labeled = chunks.map((chunk, i) => {
-    const text    = (chunk.text || '').trim();
-    const pos     = i / total;
-    const scores  = scoreChunk(text, pos, runAvg[i]);
-    const best    = Object.entries(scores).reduce((a, b) => b[1] > a[1] ? b : a, ['', -1]);
-
+    const text = (chunk.text || '').trim();
+    const pos  = i / total;
+    const scores = {};
+    for (const [sid, sdef] of Object.entries(fw.sections)) {
+      const kScore  = matchSig(text, sdef.keys) * sdef.weight;
+      const inWin   = pos >= sdef.pos[0] && pos <= sdef.pos[1];
+      const posBonus = inWin ? 2 : -1;
+      scores[sid] = Math.max(0, kScore + (kScore > 0 ? posBonus : 0));
+    }
+    const best = Object.entries(scores).reduce((a, b) => b[1] > a[1] ? b : a, ['', -1]);
     let type, confidence;
     if (best[1] <= 0) {
-      type = VIRAL_FRAMEWORK.default(pos);
-      confidence = 15;
+      type = fw.default(pos);
+      confidence = 20;
     } else {
       type = best[0];
-      confidence = Math.min(95, Math.round((best[1] / 12) * 100)); // 12 ≈ max score
+      confidence = Math.min(100, Math.round((best[1] / (fw.sections[best[0]].weight * 4)) * 100));
     }
     return { type, text, confidence, start: chunk.timestamp?.[0] };
   });
 
-  // Forward-only sequence enforcement
-  const seq = VIRAL_FRAMEWORK.sequence;
+  const seq = fw.sequence;
   let maxIdx = -1;
   const constrained = labeled.map(item => {
     const idx = seq.indexOf(item.type);
     if (idx === -1) return item;
     if (idx >= maxIdx) { maxIdx = idx; return item; }
-    return { ...item, type: VIRAL_FRAMEWORK.default(0.5), confidence: 15 };
+    return { ...item, type: fw.default(0.5), confidence: 20 };
   });
 
   return mergeConsecutive(constrained);
 }
 
-function renderStructure(sections) {
-  const fw       = VIRAL_FRAMEWORK;
+function renderStructure(sections, fwId) {
+  const fw       = FRAMEWORKS[fwId] || FRAMEWORKS['pas'];
   const blocksEl = document.getElementById('structureBlocks');
   const legendEl = document.getElementById('structureLegend');
   blocksEl.innerHTML = ''; legendEl.innerHTML = '';
@@ -1002,19 +1003,22 @@ const structurePanel       = document.getElementById('structure-panel');
 const copyStructureBtn     = document.getElementById('copyStructureBtn');
 const downloadStructureBtn = document.getElementById('downloadStructureBtn');
 
+let lastFwId = 'pas';
+let lastSections = null;
+
 analyzeBtn.addEventListener('click', () => {
   if (!transcriptChunks) return;
-  const sections = analyzeTranscript(transcriptChunks);
-  renderStructure(sections);
+  lastFwId = detectBestFramework(transcriptChunks);
+  lastSections = analyzeWithFramework(transcriptChunks, lastFwId);
+  renderStructure(lastSections, lastFwId);
   structurePanel.style.display = 'block';
   structurePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 copyStructureBtn.addEventListener('click', async () => {
-  const sections = analyzeTranscript(transcriptChunks);
-  if (!sections) return;
-  const fw = VIRAL_FRAMEWORK;
-  const text = sections.map(s => {
+  if (!lastSections) return;
+  const fw = FRAMEWORKS[lastFwId];
+  const text = lastSections.map(s => {
     const sdef = fw.sections[s.type] || { label: s.type };
     return `[${sdef.label.toUpperCase()}]\n${s.text}`;
   }).join('\n\n');
@@ -1024,14 +1028,13 @@ copyStructureBtn.addEventListener('click', async () => {
 });
 
 downloadStructureBtn.addEventListener('click', () => {
-  const sections = analyzeTranscript(transcriptChunks);
-  if (!sections) return;
-  const fw = VIRAL_FRAMEWORK;
-  const text = sections.map(s => {
+  if (!lastSections) return;
+  const fw = FRAMEWORKS[lastFwId];
+  const text = lastSections.map(s => {
     const sdef = fw.sections[s.type] || { label: s.type };
     return `[${sdef.label.toUpperCase()}]\n${s.text}`;
   }).join('\n\n');
-  downloadBlob(text, 'structure-viral.txt', 'text/plain');
+  downloadBlob(text, `structure-${lastFwId}.txt`, 'text/plain');
 });
 
 </script>
