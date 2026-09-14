@@ -331,11 +331,11 @@ select:focus{outline:none;border-color:var(--green)}
 .confidence{font-size:.62rem;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
 
 /* Section colors */
-.sec-hook   .node-circle{border-color:#818cf8;color:#818cf8}
-.sec-hook   .node-label{border-color:#818cf8;background:#f0eeff;color:#4f46e5}
-.sec-hook   .node-card{background:#f5f3ff;border-color:#c7d2fe}
-.sec-hook   .section-label{color:#4f46e5}
-.sec-hook   .badge{background:#e0e7ff;color:#4f46e5}
+.sec-hook   .node-circle{border-color:#9333ea;color:#9333ea}
+.sec-hook   .node-label{border-color:#9333ea;background:#faf5ff;color:#9333ea}
+.sec-hook   .node-card{background:#faf5ff;border-color:#e9d5ff}
+.sec-hook   .section-label{color:#9333ea}
+.sec-hook   .badge{background:#f3e8ff;color:#9333ea}
 
 .sec-intro  .node-circle{border-color:#60a5fa;color:#60a5fa}
 .sec-intro  .node-label{border-color:#60a5fa;background:#eff6ff;color:#2563eb}
@@ -343,11 +343,11 @@ select:focus{outline:none;border-color:var(--green)}
 .sec-intro  .section-label{color:#2563eb}
 .sec-intro  .badge{background:#dbeafe;color:#2563eb}
 
-.sec-body   .node-circle{border-color:#4ade80;color:#4ade80}
-.sec-body   .node-label{border-color:#4ade80;background:#f0fdf4;color:#16a34a}
-.sec-body   .node-card{background:#f0fdf4;border-color:#bbf7d0}
-.sec-body   .section-label{color:#16a34a}
-.sec-body   .badge{background:#dcfce7;color:#16a34a}
+.sec-body   .node-circle{border-color:#7e22ce;color:#7e22ce}
+.sec-body   .node-label{border-color:#7e22ce;background:#f3e8ff;color:#7e22ce}
+.sec-body   .node-card{background:#f3e8ff;border-color:#d8b4fe}
+.sec-body   .section-label{color:#7e22ce}
+.sec-body   .badge{background:#e9d5ff;color:#7e22ce}
 
 .sec-bridge .node-circle{border-color:#fbbf24;color:#fbbf24}
 .sec-bridge .node-label{border-color:#fbbf24;background:#fffbeb;color:#d97706}
@@ -355,17 +355,17 @@ select:focus{outline:none;border-color:var(--green)}
 .sec-bridge .section-label{color:#d97706}
 .sec-bridge .badge{background:#fef3c7;color:#d97706}
 
-.sec-cta    .node-circle{border-color:#f87171;color:#f87171}
-.sec-cta    .node-label{border-color:#f87171;background:#fff0f0;color:#dc2626}
-.sec-cta    .node-card{background:#fff0f0;border-color:#fecaca}
-.sec-cta    .section-label{color:#dc2626}
-.sec-cta    .badge{background:#fee2e2;color:#dc2626}
+.sec-cta    .node-circle{border-color:#6100FF;color:#6100FF}
+.sec-cta    .node-label{border-color:#6100FF;background:#f0eaff;color:#4d00cc}
+.sec-cta    .node-card{background:#f0eaff;border-color:#6100FF}
+.sec-cta    .section-label{color:#4d00cc}
+.sec-cta    .badge{background:#e0d4fd;color:#4d00cc}
 
-.sec-outro  .node-circle{border-color:#c084fc;color:#c084fc}
-.sec-outro  .node-label{border-color:#c084fc;background:#faf5ff;color:#9333ea}
-.sec-outro  .node-card{background:#faf5ff;border-color:#e9d5ff}
-.sec-outro  .section-label{color:#9333ea}
-.sec-outro  .badge{background:#f3e8ff;color:#9333ea}
+.sec-outro  .node-circle{border-color:#6d28d9;color:#6d28d9}
+.sec-outro  .node-label{border-color:#6d28d9;background:#ede9fe;color:#6d28d9}
+.sec-outro  .node-card{background:#ede9fe;border-color:#c4b5fd}
+.sec-outro  .section-label{color:#6d28d9}
+.sec-outro  .badge{background:#ddd6fe;color:#6d28d9}
 
 .sec-unknown .node-circle{border-color:var(--border);color:var(--muted)}
 .sec-unknown .node-label{border-color:var(--border);background:var(--off);color:var(--muted)}
@@ -475,7 +475,7 @@ select:focus{outline:none;border-color:var(--green)}
             <button class="btn btn-secondary" id="copyBtn">Copy</button>
             <button class="btn btn-secondary" id="downloadTxt">.txt</button>
             <button class="btn btn-secondary" id="downloadSrt">.srt</button>
-            <button class="btn btn-primary" id="analyzeBtn">🔍 Analyze structure</button>
+            <button class="btn btn-primary" id="analyzeBtn">Analyze structure</button>
           </div>
         </div>
         <div class="segments" id="segments"></div>
@@ -490,9 +490,6 @@ select:focus{outline:none;border-color:var(--green)}
             <button class="btn btn-secondary" id="copyStructureBtn">Copy</button>
             <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
           </div>
-        </div>
-        <div class="fw-detected-label" id="fwDetectedLabel" style="display:none">
-          Detected framework: <span class="fw-name" id="fwDetectedName"></span>
         </div>
         <div id="structureBlocks"></div>
       </div>
@@ -537,7 +534,7 @@ let currentModelId   = null;
 function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
 function clearError()   { errorBox.style.display = 'none'; }
 
-function setStatus(msg, active) { statusText.textContent = msg; statusEl.classList.toggle('active', !!active); }
+function setStatus(msg, active) { /* nessuna scritta di stato: la progress bar sotto basta a mostrare l'avanzamento */ }
 function setProgress(pct) {
   if (pct == null) { progressBar.classList.remove('active'); return; }
   progressBar.classList.add('active');
@@ -799,13 +796,13 @@ downloadSrt.addEventListener('click', () => {
 // etichettato CTA. Nessun modello, nessuna chiamata esterna: tutto istantaneo.
 
 const SECTIONS = {
-  hook:       { label: 'Hook',                emoji: '🪝', cls: 'sec-hook'  },
-  body:       { label: 'Body / Development',  emoji: '📖', cls: 'sec-body'  },
-  conclusion: { label: 'Conclusion',          emoji: '🏁', cls: 'sec-outro' },
-  cta:        { label: 'CTA',                 emoji: '📣', cls: 'sec-cta'   },
+  hook:       { label: 'Hook',               cls: 'sec-hook'  },
+  body:       { label: 'Body / Development', cls: 'sec-body'  },
+  conclusion: { label: 'Conclusion',         cls: 'sec-outro' },
+  cta:        { label: 'CTA',                cls: 'sec-cta'   },
 };
 
-const COLOR_MAP = { hook: '#818cf8', body: '#4ade80', conclusion: '#c084fc', cta: '#f87171' };
+const COLOR_MAP = { hook: '#9333ea', body: '#7e22ce', conclusion: '#6d28d9', cta: '#6100FF' };
 
 const HOOK_SECONDS       = 5;
 const CONCLUSION_SECONDS = 5;
@@ -904,7 +901,7 @@ function renderStructure(sections) {
       <div class="node-label"></div>
       <div class="node-card">
         <div class="section-label">
-          <span class="badge">${sdef.emoji} ${sdef.label}</span>
+          <span class="badge">${sdef.label}</span>
         </div>
         <div class="section-text">${escapeHtml(sec.text)}</div>
       </div>
@@ -930,8 +927,6 @@ const analyzeBtn           = document.getElementById('analyzeBtn');
 const structurePanel       = document.getElementById('structure-panel');
 const copyStructureBtn     = document.getElementById('copyStructureBtn');
 const downloadStructureBtn = document.getElementById('downloadStructureBtn');
-const fwDetectedLabel      = document.getElementById('fwDetectedLabel');
-const fwDetectedName       = document.getElementById('fwDetectedName');
 
 let activeSections = [];
 
@@ -939,9 +934,6 @@ analyzeBtn.addEventListener('click', () => {
   if (!transcriptChunks) return;
 
   activeSections = splitHookBodyConclusion(transcriptChunks);
-
-  fwDetectedName.textContent = '🪝 Hook → 📖 Body/Development → 🏁 Conclusion (+ 📣 CTA se rilevata)';
-  fwDetectedLabel.style.display = 'flex';
 
   renderStructure(activeSections);
 
