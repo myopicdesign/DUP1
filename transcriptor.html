@@ -373,25 +373,15 @@ select:focus{outline:none;border-color:var(--green)}
 .sec-unknown .section-label{color:var(--muted)}
 .sec-unknown .badge{background:var(--border);color:var(--muted)}
 
-/* ── FRAMEWORK TABS ── */
-.framework-tabs{
-  display:flex;flex-wrap:wrap;gap:.4rem;
-  margin-bottom:1.25rem;
+/* ── FRAMEWORK HEADER ── */
+.fw-detected-label{
+  font-family:var(--mono);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;
 }
-.fw-tab{
-  font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  padding:.3rem .8rem;border-radius:100px;
-  border:1.5px solid var(--border);
-  background:var(--off);color:var(--muted);
-  cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;gap:.35rem;
-}
-.fw-tab:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-bg)}
-.fw-tab.active{background:var(--black);color:#fff;border-color:var(--black)}
-.fw-tab .fw-auto-badge{
-  font-size:.55rem;background:var(--green);color:#fff;
-  padding:.05rem .35rem;border-radius:20px;letter-spacing:.04em;
-  font-weight:700;
+.fw-detected-label .fw-name{
+  background:var(--black);color:#fff;
+  padding:.2rem .65rem;border-radius:100px;
+  font-size:.62rem;
 }
 
 /* ── FOOTER NOTE ── */
@@ -501,8 +491,9 @@ select:focus{outline:none;border-color:var(--green)}
             <button class="btn btn-secondary" id="downloadStructureBtn">.txt</button>
           </div>
         </div>
-        <div class="framework-tabs" id="frameworkTabs"></div>
-        <div class="structure-legend" id="structureLegend"></div>
+        <div class="fw-detected-label" id="fwDetectedLabel" style="display:none">
+          Detected framework: <span class="fw-name" id="fwDetectedName"></span>
+        </div>
         <div id="structureBlocks"></div>
       </div>
 
@@ -1018,19 +1009,7 @@ function detectBestFramework(chunks) {
 function renderStructure(sections, fwId) {
   const fw       = FRAMEWORKS[fwId];
   const blocksEl = document.getElementById('structureBlocks');
-  const legendEl = document.getElementById('structureLegend');
-  blocksEl.innerHTML = ''; legendEl.innerHTML = '';
-
-  // Legend: only sections that appear
-  const usedTypes = fw.sequence.filter(t => sections.some(s => s.type === t));
-  usedTypes.forEach(type => {
-    const sdef = fw.sections[type];
-    if (!sdef) return;
-    const li = document.createElement('span');
-    li.className = 'legend-item';
-    li.textContent = `${sdef.emoji} ${sdef.label}`;
-    legendEl.appendChild(li);
-  });
+  blocksEl.innerHTML = '';
 
   const graph = document.createElement('div');
   graph.className = 'node-graph';
@@ -1070,18 +1049,12 @@ function renderStructure(sections, fwId) {
   blocksEl.appendChild(graph);
 }
 
-function renderFrameworkTabs(autoFwId, activeFwId) {
-  const tabsEl = document.getElementById('frameworkTabs');
-  tabsEl.innerHTML = '';
-  for (const [id, fw] of Object.entries(FRAMEWORKS)) {
-    const tab = document.createElement('button');
-    tab.className = 'fw-tab' + (id === activeFwId ? ' active' : '');
-    tab.dataset.fw = id;
-    const autoBadge = id === autoFwId ? '<span class="fw-auto-badge">auto</span>' : '';
-    tab.innerHTML = `${fw.emoji} ${fw.label} ${autoBadge}`;
-    tab.title = fw.description;
-    tabsEl.appendChild(tab);
-  }
+function showDetectedFramework(fwId) {
+  const fw = FRAMEWORKS[fwId];
+  const label = document.getElementById('fwDetectedLabel');
+  const name  = document.getElementById('fwDetectedName');
+  name.textContent = `${fw.emoji} ${fw.label}`;
+  label.style.display = 'flex';
 }
 
 const analyzeBtn           = document.getElementById('analyzeBtn');
@@ -1089,42 +1062,30 @@ const structurePanel       = document.getElementById('structure-panel');
 const copyStructureBtn     = document.getElementById('copyStructureBtn');
 const downloadStructureBtn = document.getElementById('downloadStructureBtn');
 
-let allFrameworkResults = {};
-let activeFrameworkId   = 'pas';
-let autoFrameworkId     = 'pas';
+let activeFrameworkSections = [];
+let activeFrameworkId       = 'pas';
+let autoFrameworkId         = 'pas';
 
 analyzeBtn.addEventListener('click', () => {
   if (!transcriptChunks) return;
 
-  // Detect best framework
-  autoFrameworkId  = detectBestFramework(transcriptChunks);
+  // Auto-detect best framework
+  autoFrameworkId   = detectBestFramework(transcriptChunks);
   activeFrameworkId = autoFrameworkId;
 
-  // Pre-compute all frameworks
-  allFrameworkResults = {};
-  for (const fwId of Object.keys(FRAMEWORKS)) {
-    allFrameworkResults[fwId] = analyzeWithFramework(transcriptChunks, fwId);
-  }
+  activeFrameworkSections = analyzeWithFramework(transcriptChunks, activeFrameworkId);
 
-  renderFrameworkTabs(autoFrameworkId, activeFrameworkId);
-  renderStructure(allFrameworkResults[activeFrameworkId], activeFrameworkId);
+  showDetectedFramework(activeFrameworkId);
+  renderStructure(activeFrameworkSections, activeFrameworkId);
 
   structurePanel.style.display = 'block';
   structurePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-document.getElementById('frameworkTabs').addEventListener('click', e => {
-  const tab = e.target.closest('.fw-tab');
-  if (!tab) return;
-  activeFrameworkId = tab.dataset.fw;
-  renderFrameworkTabs(autoFrameworkId, activeFrameworkId);
-  renderStructure(allFrameworkResults[activeFrameworkId], activeFrameworkId);
-});
-
 copyStructureBtn.addEventListener('click', async () => {
   const fw = FRAMEWORKS[activeFrameworkId];
-  const sections = allFrameworkResults[activeFrameworkId];
-  if (!sections) return;
+  const sections = activeFrameworkSections;
+  if (!sections || !sections.length) return;
   const text = sections.map(s => {
     const sdef = fw.sections[s.type] || { label: s.type };
     return `[${sdef.label.toUpperCase()}]\n${s.text}`;
@@ -1136,8 +1097,8 @@ copyStructureBtn.addEventListener('click', async () => {
 
 downloadStructureBtn.addEventListener('click', () => {
   const fw = FRAMEWORKS[activeFrameworkId];
-  const sections = allFrameworkResults[activeFrameworkId];
-  if (!sections) return;
+  const sections = activeFrameworkSections;
+  if (!sections || !sections.length) return;
   const text = sections.map(s => {
     const sdef = fw.sections[s.type] || { label: s.type };
     return `[${sdef.label.toUpperCase()}]\n${s.text}`;
