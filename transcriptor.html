@@ -814,7 +814,131 @@ const SIG = {
   transition:  [/\bdetto questo\b/i,/\bwith that said\b/i,/\bpassando a\b/i,/\bmoving on\b/i,/\bnow let'?s\b/i,/\bora vediamo\b/i,/\bthat brings us\b/i,/\bcomunque\b/i,/\bhowever\b/i,/\bperò\b/i],
 };
 
+// ── Semantic multilingual layer ──────────────────────────────────────────
+// matchSig() sopra funziona solo in IT/EN (regex hardcoded). Per farlo
+// funzionare in QUALUNQUE lingua, aggiungiamo un livello semantico basato su
+// sentence-embedding multilingue (transformers.js, tutto in-browser, nessun
+// server). Le regex e SIG restano invariate e vengono usate come fallback
+// automatico se il modello non riesce a caricarsi (es. offline/CDN bloccato).
+
+// Frasi-ancora in inglese per ogni categoria: un modello di embedding
+// multilingue mappa frasi semanticamente equivalenti in altre lingue vicine
+// nello stesso spazio vettoriale, quindi NON serve tradurle manualmente.
+const ANCHORS = {
+  hook:       ["Have you ever wondered about this?","Imagine if this happened to you.","Did you know this fact?","What if I told you something surprising?","Guess what happened next.","Wait, don't scroll past this.","Would you believe this is possible?","Stop scrolling for a second."],
+  problem:    ["The problem is that this doesn't work.","Unfortunately, most people struggle with this.","This is a real challenge many people face.","If you've ever felt frustrated by this, you're not alone.","This causes a lot of stress and difficulty."],
+  agitation:  ["This costs you more than you think.","You are losing time and money because of this.","This is risky and dangerous.","The situation keeps getting worse."],
+  solution:   ["Here's the solution to this problem.","Here's how to fix it.","This is the trick that finally works.","Here's the secret answer.","It's simply this easy."],
+  attention:  ["Listen carefully to this.","Look at this important detail.","This is critical, pay attention."],
+  interest:   ["Here's why this actually works.","Research and studies show this.","The data and numbers prove it.","Statistics confirm this pattern."],
+  desire:     ["Imagine what your life could be like.","You could finally have this.","This is the freedom and better life you dream of."],
+  action:     ["Subscribe and follow for more.","Click the link and try it now.","Download this and get started.","Comment, like and share this video.","Buy this before it's gone."],
+  intro:      ["My name is, and welcome to this video.","Today I'm going to show you something.","In this video we will cover this topic.","We'll see how this works together."],
+  step:       ["The first step is this.","Second, you need to do this.","Finally, the last step is this.","Step one starts here."],
+  story:      ["Once upon a time this happened.","I remember when this happened to me.","One day something changed everything.","This is my personal story growing up."],
+  conflict:   ["But then everything changed.","There was a turning point in this story.","This was a moment of crisis.","The point where everything went wrong."],
+  lesson:     ["I learned an important lesson from this.","I realized something after this happened.","This taught me something valuable."],
+  concept:    ["Here's what this actually means.","Let me give you the definition.","For example, think of it this way.","This concept works like an analogy."],
+  recap:      ["To recap, here's what we covered.","In summary, this is what we learned.","So we've seen how this works.","To summarize everything we discussed."],
+  outro:      ["See you next time.","Thanks so much for watching.","That's all for today, take care.","Goodbye, see you in the next video."],
+  transition: ["With that said, let's move on.","Now let's look at the next part.","However, there's more to consider.","That brings us to the next point."],
+};
+
+let semanticModel   = null;   // pipeline instance, o 'failed' se il caricamento fallisce
+let anchorVecs       = null;  // { categoria: Float32Array normalizzato }
+let chunkVecCache    = new Map(); // testo del chunk -> Float32Array normalizzato
+let currentFullText  = null;  // testo pieno dell'analisi corrente (per riconoscere le chiamate di fitScore)
+
+function dot(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+  return s;
+}
+
+function averageNormalize(vectors) {
+  const dim = vectors[0].length;
+  const avg = new Float32Array(dim);
+  for (const v of vectors) for (let i = 0; i < dim; i++) avg[i] += v[i];
+  for (let i = 0; i < dim; i++) avg[i] /= vectors.length;
+  let norm = Math.sqrt(avg.reduce((s, x) => s + x * x, 0)) || 1;
+  for (let i = 0; i < dim; i++) avg[i] /= norm;
+  return avg;
+}
+
+async function embedOne(text) {
+  const out = await semanticModel(text, { pooling: 'mean', normalize: true });
+  return Float32Array.from(out.data);
+}
+
+// Carica il modello (lazy, solo al primo "Analyze structure") e calcola gli
+// embedding di ancore + chunk della trascrizione corrente. Ritorna false se
+// qualcosa va storto, così il chiamante può ricadere sulle regex IT/EN.
+async function ensureSemanticReady(chunks, fullText, onStatus) {
+  if (semanticModel === 'failed') return false;
+  try {
+    if (!semanticModel) {
+      onStatus && onStatus('Loading multilingual model (first time only)…');
+      const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+      semanticModel = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
+    }
+
+    if (!anchorVecs) {
+      onStatus && onStatus('Preparing language-agnostic reference phrases…');
+      anchorVecs = {};
+      for (const [cat, phrases] of Object.entries(ANCHORS)) {
+        const vectors = [];
+        for (const phrase of phrases) vectors.push(await embedOne(phrase));
+        anchorVecs[cat] = averageNormalize(vectors);
+      }
+    }
+
+    onStatus && onStatus('Analyzing transcript in its original language…');
+    chunkVecCache = new Map();
+    for (const chunk of chunks) {
+      const text = (chunk.text || '').trim();
+      if (!text || chunkVecCache.has(text)) continue;
+      chunkVecCache.set(text, await embedOne(text));
+    }
+    currentFullText = fullText;
+    return true;
+  } catch (err) {
+    console.warn('Semantic model unavailable, falling back to IT/EN keyword heuristics:', err);
+    semanticModel = 'failed';
+    return false;
+  }
+}
+
 function matchSig(text, keys) {
+  const t = (text || '').trim();
+
+  // ── Modalità semantica (qualunque lingua), se il modello è pronto ──
+  if (anchorVecs) {
+    // fitScore() chiama matchSig() passando l'intera trascrizione concatenata:
+    // in quel caso verifichiamo se la categoria compare in QUALSIASI chunk,
+    // esattamente come faceva il conteggio delle regex su tutto il testo.
+    if (t === currentFullText) {
+      let total = 0;
+      for (const k of keys) {
+        if (!anchorVecs[k]) continue;
+        let best = -1;
+        for (const v of chunkVecCache.values()) best = Math.max(best, dot(v, anchorVecs[k]));
+        total += Math.max(0, best) * 4; // scala comparabile ai conteggi interi originali
+      }
+      return total;
+    }
+    // Altrimenti è il testo di un singolo chunk: usiamo il suo embedding.
+    const vec = chunkVecCache.get(t);
+    if (vec) {
+      let total = 0;
+      for (const k of keys) {
+        if (!anchorVecs[k]) continue;
+        total += Math.max(0, dot(vec, anchorVecs[k])) * 4;
+      }
+      return total;
+    }
+  }
+
+  // ── Fallback: euristiche a regex originali (IT/EN) ──
   let score = 0;
   for (const k of keys) for (const re of (SIG[k] || [])) if (re.test(text)) score++;
   return score;
@@ -1066,8 +1190,22 @@ let activeFrameworkSections = [];
 let activeFrameworkId       = 'pas';
 let autoFrameworkId         = 'pas';
 
-analyzeBtn.addEventListener('click', () => {
+analyzeBtn.addEventListener('click', async () => {
   if (!transcriptChunks) return;
+
+  clearError();
+  const originalLabel = analyzeBtn.textContent;
+  analyzeBtn.disabled = true;
+
+  const fullTextForAnalysis = transcriptChunks.map(c => c.text || '').join(' ');
+
+  // Prova a preparare il livello semantico multilingue (lazy-load del
+  // modello + embedding di ancore e chunk). Se fallisce (es. offline),
+  // matchSig() ricade automaticamente sulle regex IT/EN esistenti.
+  await ensureSemanticReady(transcriptChunks, fullTextForAnalysis, (msg) => {
+    analyzeBtn.textContent = msg;
+  });
+  analyzeBtn.textContent = originalLabel;
 
   // Auto-detect best framework
   autoFrameworkId   = detectBestFramework(transcriptChunks);
@@ -1080,6 +1218,8 @@ analyzeBtn.addEventListener('click', () => {
 
   structurePanel.style.display = 'block';
   structurePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  analyzeBtn.disabled = false;
 });
 
 copyStructureBtn.addEventListener('click', async () => {
