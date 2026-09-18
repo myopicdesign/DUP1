@@ -754,7 +754,7 @@ footer a:hover{color:var(--black)}
     <input type="file" id="fileInput" accept="video/*" style="display:none">
   </div>
 
-  <!-- RESULT (hidden until upload) -->
+  <!-- RESULT (hidden until upload) — loader semplice durante il redirect -->
   <div class="result-card" id="resultCard">
     <div class="result-header">
       <div class="result-filename">
@@ -762,49 +762,10 @@ footer a:hover{color:var(--black)}
         <span id="fileName">video.mp4</span>
         <span id="fileSize"></span>
       </div>
-      <button class="reset-btn" id="resetBtn">← Analyse another video</button>
     </div>
-    <div class="result-body">
-      <div class="r-block">
-        <span class="r-label">Transcript</span>
-        <div class="r-transcript">
-          This is an example of the automatic transcription of your video. The full tool will extract every word with precise timing, letting you see exactly what you say and when. Useful for repurposing content, optimising SEO, and building future scripts…
-        </div>
-      </div>
-      <div class="r-block">
-        <span class="r-label">Narrative structure</span>
-        <div>
-          <div class="r-struct-item">
-            <div class="r-struct-dot" style="background:#f0a500"></div>
-            <div><strong>Hook</strong> — 0–4 sec &nbsp;<span style="font-size:.75rem;color:#999">weak ⚠</span></div>
-          </div>
-          <div class="r-struct-item">
-            <div class="r-struct-dot" style="background:var(--green)"></div>
-            <div><strong>Development</strong> — 5–42 sec &nbsp;<span style="font-size:.75rem;color:#999">good ✓</span></div>
-          </div>
-          <div class="r-struct-item">
-            <div class="r-struct-dot" style="background:#888"></div>
-            <div><strong>Key info</strong> — 43–68 sec &nbsp;<span style="font-size:.75rem;color:#999">needs improvement</span></div>
-          </div>
-          <div class="r-struct-item">
-            <div class="r-struct-dot" style="background:#e04040"></div>
-            <div><strong>Closing/CTA</strong> — missing &nbsp;<span style="font-size:.75rem;color:#e04040">absent ✗</span></div>
-          </div>
-          <div style="font-size:.78rem;color:#999;margin-top:.75rem;padding:.65rem;background:var(--off);border-radius:8px;line-height:1.5">
-            💡 Your video loses 60% of viewers before the key point. Want a script that keeps them?
-          </div>
-        </div>
-      </div>
-      <div class="r-block">
-        <span class="r-label">Viral Score</span>
-        <div class="score-big" id="scoreNum">—</div>
-        <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBar" style="width:0%"></div></div>
-        <div class="score-desc" id="scoreDesc">Calculating…</div>
-        <div style="margin-top:1.25rem;padding:1rem;background:var(--green-bg);border-radius:10px;border:1px solid #c4b5fd">
-          <div style="font-size:.78rem;font-weight:700;color:var(--green-dark);margin-bottom:.3rem">Want to improve it?</div>
-          <div style="font-size:.75rem;color:#555;line-height:1.5">With DUPY Pro, build a calibrated script to push this score above 80.</div>
-        </div>
-      </div>
+    <div style="padding:3rem 2rem;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:1rem;">⏳</div>
+      <div class="score-desc" id="scoreDesc" style="font-size:1rem;color:#555;font-weight:600;">Apertura analizzatore…</div>
     </div>
   </div>
 </div>
@@ -949,10 +910,7 @@ footer a:hover{color:var(--black)}
   const zone = document.getElementById('dropZone');
   const input = document.getElementById('fileInput');
   const resultCard = document.getElementById('resultCard');
-  const scoreNum = document.getElementById('scoreNum');
-  const scoreBar = document.getElementById('scoreBar');
   const scoreDesc = document.getElementById('scoreDesc');
-  const resetBtn = document.getElementById('resetBtn');
 
   function formatBytes(b){
     if(b<1024*1024) return (b/1024).toFixed(0)+'KB';
@@ -981,6 +939,10 @@ footer a:hover{color:var(--black)}
     req.onerror = () => { scoreDesc.textContent = 'Errore. Riprova.'; };
   }
 
+  // Blocca il drop su tutta la pagina per evitare che il browser carichi il file
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => e.preventDefault());
+
   zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('over'); });
   zone.addEventListener('dragleave', ()=> zone.classList.remove('over'));
   zone.addEventListener('drop', e=>{
@@ -994,14 +956,7 @@ footer a:hover{color:var(--black)}
   });
   input.addEventListener('change', ()=>{ if(input.files[0]) saveAndRedirect(input.files[0]); });
 
-  resetBtn.addEventListener('click', ()=>{
-    resultCard.style.display='none';
-    zone.style.display='flex';
-    input.value='';
-    scoreNum.textContent='—';
-    scoreBar.style.width='0%';
-    scoreDesc.textContent='Calcolo in corso…';
-  });
+
 })();
 </script>
 
