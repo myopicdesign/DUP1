@@ -958,7 +958,7 @@ footer a:hover{color:var(--black)}
       const db = e.target.result;
       const tx = db.transaction('files', 'readwrite');
       tx.objectStore('files').put(file, 'pending_video');
-      tx.oncomplete = () => { window.location.href = 'transcriptor.html'; };
+      tx.oncomplete = () => { window.location.href = '/transcriptor'; };
       tx.onerror = () => { scoreDesc.textContent = 'Errore nel trasferimento. Riprova.'; zone.style.display='flex'; resultCard.style.display='none'; };
     };
     req.onerror = () => { scoreDesc.textContent = 'Errore. Riprova.'; };
